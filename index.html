@@ -8,16 +8,17 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 		<link rel="stylesheet" href="css/bootstrap.min.css">
-		<link rel="stylesheet" href="css/font-awesome.min.css">
 		<link rel="shortcut icon" href="img/spider.png">
 
 		<style>
 			#input {
 				height: 400px;
+				margin-left: 5px;
 			}
 
 			#output {
 				height: 200px;
+				background-color: transparent;
 			}
 
 			.container-fluid {
@@ -25,10 +26,6 @@
 				padding-bottom: 20px;
 			}
 
-			.ace_scroller {
-				background-color: transparent !important;
-			}
-			
 			.ace_gutter-active-line {
 				-moz-border-radius-topleft: 7px;
 				-moz-border-radius-bottomleft: 7px;
@@ -45,16 +42,15 @@
 			}
 
 			.ace_gutter-cell.ace_warning:before {
-				content: '\f06a';
+				content: '!';
 				position: absolute;
 				left: 0;
-				font-family: FontAwesome;
 				color: #FFA300;
 				font-size: 14px;
 				line-height: 12px;
-				background-color: #FFF;
-				border-radius: 7px;
-				border: 1px solid #FFA300;
+				font-weight: bolder;
+				padding-left: 4px;
+				padding-top: 1px;
 			}
 
 			.ace_gutter-cell.ace_error {
@@ -62,20 +58,18 @@
 			}
 
 			.ace_gutter-cell.ace_error:before {
-				content: '\f057';
+				content: '\00d7';
 				position: absolute;
 				left: 0;
-				font-family: FontAwesome;
 				color: #df3c3e;
 				font-size: 14px;
 				line-height: 12px;
-				background-color: #FFF;
-				border-radius: 7px;
-				border: 1px solid #df3c3e;
+				font-weight: bolder;
+				padding-left: 4px;
 			}
 			
 			#gutter {
-				position: absolute;
+				position: fixed;
 				background-color: #e8e8e8;
 				top: 0;
 				left: 0;
@@ -87,12 +81,17 @@
 				padding: 4px 8px;
 			}
 
+			.glyphicon {
+				vertical-align: text-top;
+			}
+
 			#editor-buttons * {
 				margin-bottom: 2.127659574468085%;
 			}
 
 			#editor-buttons input {
 				float: left;
+				width: 200px;
 			}
 
 			#editor-buttons a {
@@ -112,8 +111,8 @@
 	</head>
 	<body>
 		<div class="container-fluid">
-			<div class="row-fluid">
-				<div class="span7">
+			<div class="row">
+				<div class="col-md-7">
 					<div id="gutter" style=""></div>
 					<div id="input">#pragma semicolon 1
 
@@ -133,70 +132,78 @@ public OnPluginStart()
 }
 </div>
 				</div>
-				<div class="span5">
-					<div class="row-fluid">
-						<div id="editor-buttons" class="span12">
-							<input id="filename" class="span4" type="text" placeholder="plugin.sp">
-							<a id="download-source" href="javascript:void(0)" class="btn" data-toggle="tooltip" title="Download Source Code"><i class="icon-save"></i></a>
+				<div class="col-md-5">
+					<div class="row">
+						<div id="editor-buttons" class="col-md-12">
+							<input id="filename" class="form-control input-sm" type="text" placeholder="plugin.sp">
+							<a id="download-source" href="javascript:void(0)" class="btn btn-sm btn-default" data-toggle="tooltip" title="Download Source Code"><span class="glyphicon glyphicon-save"></span></a>
 							<span id="status" class="label label-success pull-right">Downloading...</span>
 						</div>
 					</div>
-					<div class="row-fluid">
-						<div class="span12">
-							<div class="well well-small">
+					<div class="row">
+						<div class="col-md-12">
+							<div class="well well-sm">
 								<div id="output"></div>
 							</div>
 						</div>
 					</div>
-					<div class="row-fluid">
-						<div class="span6">
-							<button onclick="javascript:startCompile()" id="compile" class="btn btn-large btn-block btn-primary" disabled><i class="icon-play-circle icon-large icon-white"></i> Compile</button>
+					<div class="row">
+						<div class="col-md-6">
+							<button onclick="javascript:startCompile()" id="compile" class="btn btn-lg btn-block btn-primary" disabled><span class="glyphicon glyphicon-play-circle"></span> Compile</button>
 						</div>
-						<div class="span6">
-							<a id="download" class="btn btn-large btn-block disabled"><i class="icon-download icon-large"></i> Download</a>
+						<div class="col-md-6">
+							<a id="download" class="btn btn-default btn-lg btn-block disabled"><span class="glyphicon glyphicon-download"></span> Download</a>
 						</div>
 					</div>
-					<div class="row-fluid">
-						<div class="span6">
-							<ul id="includes" class="nav nav-tabs nav-stacked">
-								<li id="includes-helper" class="disabled"><a><i class="icon-info-sign"></i> Drop thirdparty include files here to use them</a></li>
-							</ul>
+					<div class="row">
+						<div class="col-md-6">
+							<div id="includes" class="list-group">
+								<a id="includes-helper" class="list-group-item text-muted"><span class="glyphicon glyphicon-info-sign"></span> Drop thirdparty include files here to use them</a>
+							</div>
 						</div>
-						<div class="span6">
-							<ul id="history" class="nav nav-tabs nav-stacked">
-								<li id="history-helper" class="disabled"><a><i class="icon-info-sign"></i> Your last 5 compiled binaries will appear here</a></li>
-							</ul>
+						<div class="col-md-6">
+							<div id="history" class="list-group">
+								<a id="history-helper" class="list-group-item text-muted"><span class="glyphicon glyphicon-info-sign"></span> Your last 5 compiled binaries will appear here</a>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div id="welcome" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="welcome-label" aria-hidden="true">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-				<h3 id="welcome-label">Welcome!</h3>
-			</div>
-			<div class="modal-body">
-				<p><small><strong>SP<span class="muted">IDE</span>R</strong></small> is dependent on some fairly recent browser features, if you're not using the latest (and I really mean the latest) version of Chrome, Firefox, or Internet Explorer it'll likely be horribly broken.</p>
-				<p>You have been warned.</p>
-				<p>P.S. Your browser will hang for a little bit when you hit compile, this is to be expected and should only last a number of seconds.</p>
-			</div>
-			<div class="modal-footer">
-				<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Continue</button>
+		<div id="welcome" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+						<h4 class="modal-title">Welcome!</h4>
+					</div>
+					<div class="modal-body">
+						<p><small><strong>SP<span class="text-muted">IDE</span>R</strong></small> is dependent on some fairly recent browser features, if you're not using the latest (and I really mean the latest) version of Chrome, Firefox, or Internet Explorer it'll likely be horribly broken.</p>
+						<p>You have been warned.</p>
+						<p>P.S. Your browser will hang for a little bit when you hit compile, this is to be expected and should only last a number of seconds.</p>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-primary" data-dismiss="modal">Continue</button>
+					</div>
+				</div>
 			</div>
 		</div>
 		
-		<div id="fileError" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="fileError-label" aria-hidden="true">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-				<h3 id="fileError-label">Error</h3>
-			</div>
-			<div class="modal-body">
-				<p></p>
-			</div>
-			<div class="modal-footer">
-				<button class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>
+		<div id="fileError" class="modal fade">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+						<h4 class="modal-title">Error</h4>
+					</div>
+					<div class="modal-body">
+						<p></p>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-primary" data-dismiss="modal">Close</button>
+					</div>
+				</div>
 			</div>
 		</div>
 
@@ -351,7 +358,7 @@ public OnPluginStart()
 						
 						$('#history-helper').addClass('hide');
 						
-						var historyItems = $('#history li');
+						var historyItems = $('#history > a');
 						if (historyItems.length >= 5) {
 							var last = historyItems.filter(':last');
 							URL.revokeObjectURL(last.attr('href'));
@@ -360,13 +367,13 @@ public OnPluginStart()
 
 						var date = new Date();
 						var dstring = date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' ' + ('0' + date.getHours()).slice(-2) + ':' + ('0' + date.getMinutes()).slice(-2) + ':' + ('0' + date.getSeconds()).slice(-2);
-						$('#history').prepend('<li><a download="' + compiledName + '" href="' + url + '"><i class="icon-download"></i> <span class="muted">' + dstring + '</span></a></li>');
+						$('#history').prepend('<a class="list-group-item" download="' + compiledName + '" href="' + url + '"><span class="glyphicon glyphicon-download"></span> ' + dstring + '</a>');
 					} else {
 						var download = $('#download');
 						download.attr('href', 'javascript:void(0)');
 						download.removeClass('disabled');
 						
-						$('#history-helper').html('<a><i class="icon-info-sign"></i> If you were using a better browser, your last 5 compiled binaries would appear here</a>');
+						$('#history-helper').html('<span class="glyphicon glyphicon-info-sign"></span> If you were using a better browser, your last 5 compiled binaries would appear here');
 						
 						download.click(function (blob) {
 							return function(e) {
@@ -469,7 +476,7 @@ public OnPluginStart()
 							FS.createDataFile('thirdparty', theFile.name, e.target.result, true, false);
 							
 							$('#includes-helper').addClass('hide');
-							$('#includes').append('<li><a href="javascript:void(0)" onclick="deleteIncludeFile(this);"><i class="icon-trash"></i> <span class="muted">' + theFile.name + '</span></a></li>');
+							$('#includes').append('<a class="list-group-item" href="javascript:void(0)" onclick="deleteIncludeFile(this);"><span class="glyphicon glyphicon-trash"></span> ' + theFile.name + '</a>');
 						};
 					})(file);
 					
@@ -481,7 +488,7 @@ public OnPluginStart()
 				FS.deleteFile('thirdparty/' + $(elem).text().trim());
 				$(elem).parent().remove();
 				
-				if ($('#includes li').length <= 1) {
+				if ($('#includes > a').length <= 1) {
 					$('#includes-helper').removeClass('hide');
 				}
 			};
