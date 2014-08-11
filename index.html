@@ -305,11 +305,11 @@ public OnPluginStart()
 
 			var startCompile = function() {
 				if (FS.root.contents[sourceName]) {
-					FS.deleteFile(sourceName);
+					FS.unlink(sourceName);
 				}
 
 				if (FS.root.contents[compiledName]) {
-					FS.deleteFile(compiledName);
+					FS.unlink(compiledName);
 				}
 
 				var source = input.getValue();
@@ -336,6 +336,7 @@ public OnPluginStart()
 			var reallyCompile = function() {
 				startTime = Date.now();
 
+				Module['calledRun'] = false;
 				Module['postRun'] = [compiled];
 				shouldRunNow = true;
 				run([sourceName, '-iinclude', '-ithirdparty']);
@@ -485,7 +486,7 @@ public OnPluginStart()
 			}, false);
 			
 			var deleteIncludeFile = function(elem) {
-				FS.deleteFile('thirdparty/' + $(elem).text().trim());
+				FS.unlink('thirdparty/' + $(elem).text().trim());
 				$(elem).parent().remove();
 				
 				if ($('#includes > a').length <= 1) {
@@ -528,45 +529,6 @@ public OnPluginStart()
 			};
 			Module.setStatus('Downloading...');
 
-			var decompressWorker = new Worker('js/decompress.js');
-			var decompressCallbacks = [];
-			var decompressions = 0;
-			Module["decompress"] = function(data, callback) {
-				var id = decompressCallbacks.length;
-				decompressCallbacks.push(callback);
-				decompressWorker.postMessage({ data: data, id: id });
-				if (Module['setStatus']) {
-					decompressions++;
-					Module['setStatus']('Decompressing...');
-				}
-			};
-			decompressWorker.onmessage = function(event) {
-				decompressCallbacks[event.data.id](event.data.data);
-				decompressCallbacks[event.data.id] = null;
-				if (Module['setStatus']) {
-					decompressions--;
-					if (decompressions == 0) {
-						Module['setStatus']('');
-					}
-				}
-			};
-			var compiledCodeXHR = new XMLHttpRequest();
-			compiledCodeXHR.open('GET', 'spcomp.js.compress', true);
-			compiledCodeXHR.responseType = 'arraybuffer';
-			compiledCodeXHR.onload = function() {
-				var arrayBuffer = compiledCodeXHR.response;
-				if (!arrayBuffer) throw('Loading compressed code failed.');
-				var byteArray = new Uint8Array(arrayBuffer);
-				Module.decompress(byteArray, function(decompressed) {
-					var blob = new Blob([new Uint8Array(decompressed)], {'type': 'application/javascript'});
-					var scriptTag = document.createElement('script');
-					scriptTag.setAttribute('type', 'text/javascript');
-					scriptTag.setAttribute('src', window.URL.createObjectURL(blob));
-					document.body.appendChild(scriptTag);
-				});
-			};
-			compiledCodeXHR.send(null);
-			
 			var GoSquared = {};
 			GoSquared.acct = "GSN-267368-L";
 			(function(w){
@@ -581,6 +543,7 @@ public OnPluginStart()
 			w.addEventListener("load", gs, false);
 			})(window);
 		</script>
+		<script async src="spcomp.js"></script>
 	</body>
 </html>
 
