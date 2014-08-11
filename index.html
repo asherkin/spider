@@ -85,8 +85,8 @@
 				vertical-align: text-top;
 			}
 
-			#editor-buttons * {
-				margin-bottom: 2.127659574468085%;
+			#editor-buttons {
+				margin-bottom: 15px;
 			}
 
 			#editor-buttons input {
@@ -94,25 +94,21 @@
 				width: 200px;
 			}
 
-			#editor-buttons a {
-				margin-left: 2.127659574468085%;
-				margin-right: 2.127659574468085%;
+			#editor-buttons input, #editor-buttons a {
+				margin-right: 10px;
+				margin-bottom: 5px;
 			}
 
 			#includes, #history {
-				margin-top: 4.25531914894%;
+				margin-top: 20px;
 				margin-bottom: 0;
-			}
-
-			.well {
-				margin-bottom: 2.127659574468085% !important;
 			}
 		</style>
 	</head>
 	<body>
 		<div class="container-fluid">
 			<div class="row">
-				<div class="col-md-7">
+				<div class="col-xs-7">
 					<div id="gutter" style=""></div>
 					<div id="input">#pragma semicolon 1
 
@@ -132,36 +128,36 @@ public OnPluginStart()
 }
 </div>
 				</div>
-				<div class="col-md-5">
+				<div class="col-xs-5">
 					<div class="row">
-						<div id="editor-buttons" class="col-md-12">
+						<div id="editor-buttons" class="col-xs-12">
 							<input id="filename" class="form-control input-sm" type="text" placeholder="plugin.sp">
 							<a id="download-source" href="javascript:void(0)" class="btn btn-sm btn-default" data-toggle="tooltip" title="Download Source Code"><span class="glyphicon glyphicon-save"></span></a>
 							<span id="status" class="label label-success pull-right">Downloading...</span>
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-12">
+						<div class="col-xs-12">
 							<div class="well well-sm">
 								<div id="output"></div>
 							</div>
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-6">
+						<div class="col-xs-6">
 							<button onclick="javascript:startCompile()" id="compile" class="btn btn-lg btn-block btn-primary" disabled><span class="glyphicon glyphicon-play-circle"></span> Compile</button>
 						</div>
-						<div class="col-md-6">
+						<div class="col-xs-6">
 							<a id="download" class="btn btn-default btn-lg btn-block disabled"><span class="glyphicon glyphicon-download"></span> Download</a>
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-md-6">
+						<div class="col-xs-6">
 							<div id="includes" class="list-group">
 								<a id="includes-helper" class="list-group-item text-muted"><span class="glyphicon glyphicon-info-sign"></span> Drop thirdparty include files here to use them</a>
 							</div>
 						</div>
-						<div class="col-md-6">
+						<div class="col-xs-6">
 							<div id="history" class="list-group">
 								<a id="history-helper" class="list-group-item text-muted"><span class="glyphicon glyphicon-info-sign"></span> Your last 5 compiled binaries will appear here</a>
 							</div>
@@ -528,20 +524,6 @@ public OnPluginStart()
 				}
 			};
 			Module.setStatus('Downloading...');
-
-			var GoSquared = {};
-			GoSquared.acct = "GSN-267368-L";
-			(function(w){
-			function gs(){
-				w._gstc_lt = +new Date;
-				var d = document, g = d.createElement("script");
-				g.type = "text/javascript";
-				g.src = "//d1l6p2sc9645hc.cloudfront.net/tracker.js";
-				var s = d.getElementsByTagName("script")[0];
-				s.parentNode.insertBefore(g, s);
-			}
-			w.addEventListener("load", gs, false);
-			})(window);
 		</script>
 		<script async src="spcomp.js"></script>
 	</body>
