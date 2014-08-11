@@ -893,7 +893,7 @@ stock ByteCountToCells(size)
  *						NOT be auto-intialized.
  * @return				New Handle to the array object.
  */
-native Handle:CreateArray(blocksize=1, startsize=0);
+native ArrayList:CreateArray(blocksize=1, startsize=0);
 
 /**
  * Clears an array of all entries.  This is the same as ResizeArray(0).
@@ -1106,6 +1106,30 @@ native FindStringInArray(Handle:array, const String:item[]);
  * @error				Invalid Handle
  */
 native FindValueInArray(Handle:array, any:item); 
+
+methodmap ArrayList < Handle {
+	public ArrayList() = CreateArray;
+	public Clear() = ClearArray;
+	public Clone() = CloneArray;
+	public Resize() = ResizeArray;
+	public Push() = PushArrayCell;
+	public PushString() = PushArrayString;
+	public PushArray() = PushArrayArray;
+	public Get() = GetArrayCell;
+	public GetString() = GetArrayString;
+	public GetArray() = GetArrayArray;
+	public Set() = SetArrayCell;
+	public SetString() = SetArrayString;
+	public SetArray() = SetArrayArray;
+	public ShiftUp() = ShiftArrayUp;
+	public Erase() = RemoveFromArray;
+	public SwapAt() = SwapArrayItems;
+	public FindString() = FindStringInArray;
+	public FindValue() = FindValueInArray;
+	property int Length {
+		public get() = GetArraySize;
+	}
+};
 /**
  * vim: set ts=4 :
  * =============================================================================
@@ -1311,7 +1335,7 @@ stock PopStack(Handle:stack)
  *
  * @return 			New Map Handle, which must be freed via CloseHandle().
  */
-native Handle:CreateTrie();
+native StringMap:CreateTrie();
 
 /**
  * Sets a value in a hash map, either inserting a new entry or replacing an old one.
@@ -1416,6 +1440,66 @@ native ClearTrie(Handle:map);
  * @error			Invalid Handle.
  */
 native GetTrieSize(Handle:map);
+
+/* Object-oriented wrapper for maps. */
+methodmap StringMap < Handle {
+	public StringMap() = CreateTrie;
+	public SetValue() = SetTrieValue;
+	public SetArray() = SetTrieArray;
+	public SetString() = SetTrieString;
+	public GetValue() = GetTrieValue;
+	public GetArray() = GetTrieArray;
+	public GetString() = GetTrieString;
+	public Remove() = RemoveFromTrie;
+	public Clear() = ClearTrie;
+	property int Size {
+		public get() = GetTrieSize;
+	}
+}
+
+/**
+ * Creates a snapshot of all keys in the map. If the map is changed after this
+ * call, the changes are not reflected in the snapshot. Keys are not sorted.
+ *
+ * @param map       Map Handle.
+ * @return			New Map Snapshot Handle, which must be closed via CloseHandle().
+ * @error			Invalid Handle.
+ */
+native Handle:CreateTrieSnapshot(Handle:map);
+
+/**
+ * Returns the number of keys in a map snapshot. Note that this may be
+ * different from the size of the map, since the map can change after the
+ * snapshot of its keys was taken.
+ *
+ * @param snapshot	Map snapshot.
+ * @return			Number of keys.
+ * @error			Invalid Handle.
+ */
+native TrieSnapshotLength(Handle:snapshot);
+
+/**
+ * Returns the buffer size required to store a given key. That is, it returns
+ * the length of the key plus one.
+ *
+ * @param snapshot	Map snapshot.
+ * @param index		Key index (starting from 0).
+ * @return 			Buffer size required to store the key string.
+ * @error			Invalid Handle or index out of range.
+ */
+native TrieSnapshotKeyBufferSize(Handle:snapshot, index);
+
+/**
+ * Retrieves the key string of a given key in a map snapshot.
+ *
+ * @param snapshot	Map snapshot.
+ * @param index		Key index (starting from 0).
+ * @param buffer	String buffer.
+ * @param maxlength	Maximum buffer length.
+ * @return			Number of bytes written to the buffer.
+ * @error			Invalid Handle or index out of range.
+ */
+native GetTrieSnapshotKey(Handle:snapshot, index, String:buffer[], maxlength);
 /**
  * vim: set ts=4 :
  * =============================================================================
@@ -2174,9 +2258,16 @@ forward OnClientCookiesCached(client);
  * @param action		CookieMenuAction being performed.
  * @param info			Info data passed.
  * @param buffer		Outbut buffer.
- * @param maxlen		Max length of the output buffer.			
+ * @param maxlen		Max length of the output buffer.
+ * @noreturn			
  */
-functag public CookieMenuHandler(client, CookieMenuAction:action, any:info, String:buffer[], maxlen);
+typedef CookieMenuHandler = function void (
+  int client,
+  CookieMenuAction action,
+  any info,
+  char[] buffer,
+  int maxlen
+);
 
 /**
  * Add a new prefab item to the client cookie settings menu.
@@ -2191,7 +2282,7 @@ functag public CookieMenuHandler(client, CookieMenuAction:action, any:info, Stri
  * @noreturn
  * @error				Invalid cookie handle.
  */
-native SetCookiePrefabMenu(Handle:cookie, CookieMenu:type, const String:display[], CookieMenuHandler:handler=CookieMenuHandler:-1, info=0);
+native SetCookiePrefabMenu(Handle:cookie, CookieMenu:type, const String:display[], CookieMenuHandler:handler=INVALID_FUNCTION, info=0);
 
 /**
  * Adds a new item to the client cookie settings menu.
@@ -2371,7 +2462,7 @@ forward bool:OnClientConnect(client, String:rejectmsg[], maxlen);
  * @param client		Client index.
  * @noreturn
  */
-forward OnClientConnected(client);
+forward void OnClientConnected(client);
 
 /**
  * Called when a client is entering the game.
@@ -2387,7 +2478,7 @@ forward OnClientConnected(client);
  * @param client		Client index.
  * @noreturn
  */
-forward OnClientPutInServer(client);
+forward void OnClientPutInServer(client);
 
 /**
  * Called when a client is disconnecting from the server.
@@ -2395,7 +2486,7 @@ forward OnClientPutInServer(client);
  * @param client		Client index.
  * @noreturn
  */
-forward OnClientDisconnect(client);
+forward void OnClientDisconnect(client);
 
 /**
  * Called when a client is disconnected from the server.
@@ -2403,7 +2494,7 @@ forward OnClientDisconnect(client);
  * @param client		Client index.
  * @noreturn
  */
-forward OnClientDisconnect_Post(client);
+forward void OnClientDisconnect_Post(client);
 
 /**
  * Called when a client is sending a command.
@@ -2423,7 +2514,7 @@ forward Action:OnClientCommand(client, args);
  * @param client		Client index.
  * @noreturn
  */
-forward OnClientSettingsChanged(client);
+forward void OnClientSettingsChanged(client);
 
 /**
  * Called when a client receives a Steam ID.  The state of a client's 
@@ -2436,7 +2527,7 @@ forward OnClientSettingsChanged(client);
  * @param auth			Client auth string.
  * @noreturn
  */
-forward OnClientAuthorized(client, const String:auth[]);
+forward void OnClientAuthorized(client, const String:auth[]);
 
 /**
  * Called once a client is authorized and fully in-game, but 
@@ -2471,7 +2562,7 @@ forward Action:OnClientPreAdminCheck(client);
  * @param client		Client index.
  * @noreturn
  */
-forward OnClientPostAdminFilter(client);
+forward void OnClientPostAdminFilter(client);
 
 /**
  * Called once a client is authorized and fully in-game, and 
@@ -2483,7 +2574,7 @@ forward OnClientPostAdminFilter(client);
  * @param client		Client index.
  * @noreturn
  */
-forward OnClientPostAdminCheck(client);
+forward void OnClientPostAdminCheck(client);
 
 /**
  * This function will be deprecated in a future release.  Use the MaxClients variable instead.
@@ -3209,7 +3300,7 @@ stock ReplyToTargetError(client, reason)
  * @param clients       Array to fill with unique, valid client indexes.
  * @return              True if pattern was recognized, false otherwise.
  */
-functag public bool:MultiTargetFilter(const String:pattern[], Handle:clients);
+typedef MultiTargetFilter = function bool (const char[] pattern, Handle clients);
 
 /**
  * Adds a multi-target filter function for ProcessTargetString().
@@ -3562,7 +3653,7 @@ native FormatActivitySource(client, target, const String:namebuf[], maxlength);
  * @return				An Action value.  Not handling the command
  *						means that Source will report it as "not found."
  */
-functag public Action:SrvCmd(args);
+typedef SrvCmd = function Action (int args);
 
 /**
  * Creates a server-only console command, or hooks an already existing one.  
@@ -3586,7 +3677,7 @@ native RegServerCmd(const String:cmd[], SrvCmd:callback, const String:descriptio
  * @return				An Action value.  Not handling the command
  *						means that Source will report it as "not found."
  */
-functag public Action:ConCmd(client, args);
+typedef ConCmd = function Action (int client, int args);
 
 /**
  * Creates a console command, or hooks an already existing one.
@@ -3690,7 +3781,7 @@ native Handle:FindConVar(const String:name[]);
  * @param newValue		String containing the new value of the convar.
  * @noreturn
  */
-functag public ConVarChanged(Handle:convar, const String:oldValue[], const String:newValue[]);
+typedef ConVarChanged = function void (Handle convar, const char[] oldValue, const char[] newValue);
 
 /**
  * Creates a hook for when a console variable's value is changed.
@@ -4139,7 +4230,7 @@ native RemoveServerTag(const String:tag[]);
  * @param argc          Argument count.
  * @return				Action to take (see extended notes above).
  */
-functag public Action:CommandListener(client, const String:command[], argc);
+typedef CommandListener = function Action (int client, const char[] command, int argc);
 
 #define FEATURECAP_COMMANDLISTENER  "command listener"
 
@@ -4202,7 +4293,7 @@ forward Action:OnClientSayCommand(client, const String:command[], const String:s
  * @param sArgs			Chat argument string.
  * 
  */
-forward OnClientSayCommand_Post(client, const String:command[], const String:sArgs[]);
+forward void OnClientSayCommand_Post(int client, const char[] command, const char[] sArgs);
 /**
  * vim: set ts=4 :
  * =============================================================================
@@ -4247,18 +4338,10 @@ forward OnClientSayCommand_Post(client, const String:command[], const String:sAr
 
 struct PlVers
 {
-	version,
-	String:filevers[],
-	String:date[],
-	String:time[]
-};
-
-/**
- * Function helper values.
- */
-enum Function
-{
-     INVALID_FUNCTION = -1,
+	public int version;
+	public const char[] filevers;
+	public const char[] date;
+	public const char[] time;
 };
 
 /**
@@ -4324,10 +4407,10 @@ enum PluginInfo
  */
 struct Extension
 {
-	const String:name[],	/**< Short name */
-	const String:file[],	/**< Default file name */
-	bool:autoload,			/**< Whether or not to auto-load */
-	bool:required,			/**< Whether or not to require */
+	public const char[] name;	/**< Short name */
+	public const char[] file;	/**< Default file name */
+	public bool autoload;		/**< Whether or not to auto-load */
+	public bool required;		/**< Whether or not to require */
 };
 
 /**
@@ -4335,9 +4418,9 @@ struct Extension
  */
 struct SharedPlugin
 {
-	const String:name[],	/**< Short name */
-	const String:file[],	/**< File name */
-	bool:required,			/**< Whether or not to require */
+	public const char[] name;	/**< Short name */
+	public const char[] file;	/**< File name */
+	public bool required;		/**< Whether or not to require */
 };
 
 public Float:NULL_VECTOR[3];		/**< Pass this into certain functions to act as a C++ NULL */
@@ -5647,9 +5730,9 @@ native SQL_UnlockDatabase(Handle:database);
  *						empty even if an error condition exists, so it is important 
  *						to check the actual Handle value instead.
  * @param data			Data passed in via the original threaded invocation.
- * @param 
+ * @noreturn
  */
-functag public SQLTCallback(Handle:owner, Handle:hndl, const String:error[], any:data);
+typedef SQLTCallback = function void (Handle owner, Handle hndl, const char[] error, any data);
 
 /**
  * Tells whether two database handles both point to the same database 
@@ -5707,18 +5790,7 @@ native SQL_TQuery(Handle:database, SQLTCallback:callback, const String:query[], 
  *
  * @return              A transaction handle.
  */
-native Handle:SQL_CreateTransaction();
-
-/**
- * Adds a query to a transaction object.
- *
- * @param txn           A transaction handle.
- * @param query         Query string.
- * @param data			Extra data value to pass to the final callback.
- * @return              The index of the query in the transaction's query list.
- * @error               Invalid transaction handle.
- */
-native SQL_AddQuery(Handle:txn, const String:query[], any:data=0);
+native Transaction:SQL_CreateTransaction();
 
 /**
  * Callback for a successful transaction.
@@ -5730,7 +5802,7 @@ native SQL_AddQuery(Handle:txn, const String:query[], any:data=0);
  * @param queryData     An array of each data value passed to SQL_AddQuery().
  * @noreturn
  */
-functag public SQLTxnSuccess(Handle:db, any:data, numQueries, Handle:results[], any:queryData[]);
+typedef SQLTxnSuccess = function void (Handle db, any data, int numQueries, Handle[] results, any[] queryData);
 
 /**
  * Callback for a failed transaction.
@@ -5743,7 +5815,24 @@ functag public SQLTxnSuccess(Handle:db, any:data, numQueries, Handle:results[], 
  * @param queryData     An array of each data value passed to SQL_AddQuery().
  * @noreturn
  */
-functag public SQLTxnFailure(Handle:db, any:data, numQueries, const String:error[], failIndex, any:queryData[]);
+typedef SQLTxnFailure = function void (Handle db, any data, int numQueries, const char[] error, int failIndex, any[] queryData);
+
+/**
+ * Adds a query to a transaction object.
+ *
+ * @param txn           A transaction handle.
+ * @param query         Query string.
+ * @param data			Extra data value to pass to the final callback.
+ * @return              The index of the query in the transaction's query list.
+ * @error               Invalid transaction handle.
+ */
+native SQL_AddQuery(Transaction:txn, const String:query[], any:data=0);
+
+methodmap Transaction < Handle
+{
+		public Transaction() = SQL_CreateTransaction;
+		public AddQuery() = SQL_AddQuery;
+};
 
 /**
  * Sends a transaction to the database thread. The transaction handle is
@@ -5761,9 +5850,9 @@ functag public SQLTxnFailure(Handle:db, any:data, numQueries, const String:error
  */
 native SQL_ExecuteTransaction(
 		Handle:db,
-		Handle:txn,
-		SQLTxnSuccess:onSuccess=SQLTxnSuccess:-1,
-		SQLTxnFailure:onError=SQLTxnFailure:-1,
+		Transaction:txn,
+		SQLTxnSuccess:onSuccess = INVALID_FUNCTION,
+		SQLTxnFailure:onError = INVALID_FUNCTION,
 		any:data=0,
 		DBPriority:priority=DBPrio_Normal);
 /**
@@ -7768,6 +7857,7 @@ native LogToOpenFileEx(Handle:hndl, const String:message[], any:...);
 #endif
 #define _float_included
 
+#if !defined __sourcepawn2__
 /**
  * Converts an integer into a floating point value.
  *
@@ -7775,6 +7865,7 @@ native LogToOpenFileEx(Handle:hndl, const String:message[], any:...);
  * @return				Floating point value.
  */
 native Float:float(value);
+#endif
 
 /**
  * Multiplies two floats together.
@@ -7977,6 +8068,7 @@ stock RoundFloat(Float:value)
  * User defined operators.
  *
  */
+#if !defined __sourcepawn2__
 #pragma rational Float
 
 native bool:__FLOAT_GT__(Float:a, Float:b);
@@ -8101,6 +8193,7 @@ stock bool:operator<=(oper1, Float:oper2)
 forward operator%(Float:oper1, Float:oper2);
 forward operator%(Float:oper1, oper2);
 forward operator%(oper1, Float:oper2);
+#endif // __sourcepawn2__
 
 #define FLOAT_PI 3.1415926535897932384626433832795
 
@@ -8527,7 +8620,7 @@ native Call_Cancel();
  * @param numParams			Number of parameters passed to the native.
  * @return 					Value for the native call to return.
  */
-functag public NativeCall(Handle:plugin, numParams);
+typedef NativeCall = function int (Handle plugin, int numParams);
 
 /**
  * Creates a dynamic native.  This should only be called in AskPluginLoad(), or 
@@ -8597,6 +8690,15 @@ native SetNativeString(param, const String:source[], maxlength, bool:utf8=true, 
  * @error					Invalid parameter number or calling from a non-native function.
  */
 native any:GetNativeCell(param);
+
+/**
+ * Gets a function pointer from a native parameter.
+ *
+ * @param param             Parameter number, starting from 1.
+ * @return                  Function pointer at the given parameter number.
+ * @error                   Invalid parameter number, or calling from a non-native function.
+ */
+native Function GetNativeFunction(param);
 
 /**
  * Gets a cell from a native parameter, by reference.
@@ -8669,7 +8771,7 @@ native FormatNativeString(out_param,
  * @param data			Data passed to the RequestFrame native.
  * @noreturn
  */
-functag public RequestFrameCallback(any:data);
+typedef RequestFrameCallback = function void (any data);
 
 /**
  * Creates a single use Next Frame hook.
@@ -9444,9 +9546,9 @@ native MakeCompatEntRef(ref);
 #define _handles_included
 
 /**
- * Handle helper macros.
+ * Preset Handle values.
  */
-enum Handle
+enum Handle: // Tag disables introducing "Handle" as a symbol.
 {
 	INVALID_HANDLE = 0,
 };
@@ -9460,10 +9562,9 @@ enum Handle
  *       sure you read the documentation on whatever provided the Handle.
  *
  * @param hndl		Handle to close.
- * @return			True if successful, false if not closeable.
  * @error			Invalid handles will cause a run time error.
  */
-native bool:CloseHandle(Handle:hndl);
+native CloseHandle(Handle:hndl);
 
 /**
  * Clones a Handle.  When passing handles in between plugins, caching handles
@@ -9483,6 +9584,15 @@ native bool:CloseHandle(Handle:hndl);
  * @error			Invalid handles will cause a run time error.
  */
 native Handle:CloneHandle(Handle:hndl, Handle:plugin=INVALID_HANDLE);
+
+/**
+ * Helper for object-oriented syntax.
+ */
+methodmap Handle __nullable__
+{
+	public Clone() = CloneHandle;
+	public ~Handle() = CloseHandle;
+}
 
 /**
  * Do not use this function.  Returns if a Handle and its contents 
@@ -10297,7 +10407,6 @@ native SetGlobalTransTarget(client);
 
 /**
  * Retrieves the language number of a client.
- * Currently this simply returns the server language index.
  *
  * @param client	Client index.
  * @return			Language number client is using.
@@ -10482,7 +10591,7 @@ forward Action:OnLogAction(Handle:source,
  * @return				Plugin_Handled or Plugin_Stop will prevent the message 
  * 						from being written to the log file.
  */
-functag public Action:GameLogHook(const String:message[]);
+typedef GameLogHook = function Action (const char[] message);
 
 /**
  * Adds a game log hook.
@@ -10599,12 +10708,12 @@ native bool:EndOfMapVoteEnabled();
  * Called when mapchooser removes a nomination from its list.
  * Nominations cleared on map start will not trigger this forward
  */
-forward OnNominationRemoved(const String:map[], owner);
+forward void OnNominationRemoved(const char[] map, int owner);
 
 /**
  * Called when mapchooser starts a Map Vote.
  */
-forward OnMapVoteStarted();
+forward void OnMapVoteStarted();
 
 
 public SharedPlugin:__pl_mapchooser = 
@@ -10783,9 +10892,8 @@ enum MenuSource
  * @param action			The action of the menu.
  * @param param1			First action parameter (usually the client).
  * @param param2			Second action parameter (usually the item).
- * @noreturn
  */
-functag public MenuHandler(Handle:menu, MenuAction:action, param1, param2);
+typedef MenuHandler = function int (Menu menu, MenuAction action, int param1, int param2);
 
 /**
  * Creates a new, empty menu using the default style.
@@ -10797,7 +10905,7 @@ functag public MenuHandler(Handle:menu, MenuAction:action, param1, param2);
  *							the only default actions.
  * @return					A new menu Handle.
  */
-native Handle:CreateMenu(MenuHandler:handler, MenuAction:actions=MENU_ACTIONS_DEFAULT);
+native Menu:CreateMenu(MenuHandler:handler, MenuAction:actions=MENU_ACTIONS_DEFAULT);
 
 /**
  * Displays a menu to a client.
@@ -11086,7 +11194,7 @@ native GetMenuOptionFlags(Handle:menu);
  * @noreturn
  * @error					Invalid Handle.
  */
-native SetMenuOptionFlags(Handle:menu, flags);
+native void SetMenuOptionFlags(Handle:menu, flags);
 
 /**
  * Returns whether a vote is in progress.
@@ -11161,12 +11269,14 @@ stock bool:VoteMenuToAll(Handle:menu, time, flags=0)
  *							defines.
  * @noreturn
  */
-functag public VoteHandler(Handle:menu,
-						   num_votes, 
-						   num_clients,
-						   const client_info[][2], 
-						   num_items,
-						   const item_info[][2]);	   
+typedef VoteHandler = function void (
+  Menu menu,
+  int num_votes, 
+  int num_clients,
+  const int client_info[][2], 
+  int num_items,
+  const int item_info[][2]
+);
 
 /**
  * Sets an advanced vote handling callback.  If this callback is set,
@@ -11178,6 +11288,61 @@ functag public VoteHandler(Handle:menu,
  * @error					Invalid Handle or callback.
  */
 native SetVoteResultCallback(Handle:menu, VoteHandler:callback);
+
+methodmap Menu < Handle {
+	public Menu() = CreateMenu;
+	public Display() = DisplayMenu;
+	public DisplayAt() = DisplayMenuAtItem;
+	public AddItem() = AddMenuItem;
+	public InsertItem() = InsertMenuItem;
+	public RemoveItem() = RemoveMenuItem;
+	public RemoveAllItems() = RemoveAllMenuItems;
+	public GetItem() = GetMenuItem;
+	public GetTitle() = GetMenuTitle;
+	public SetTitle() = SetMenuTitle;
+	public ToPanel() = CreatePanelFromMenu;
+	public Cancel() = CancelMenu;
+	public DisplayVote() = VoteMenu;
+	public DisplayVoteToAll() = VoteMenuToAll;
+
+	property int Pagination {
+		public get() = GetMenuPagination;
+		public set(int value) {
+			SetMenuPagination(this, value);
+		}
+	}
+	property int OptionFlags {
+		public get() = GetMenuOptionFlags;
+		public set() = SetMenuOptionFlags;
+	}
+	property bool ExitButton {
+		public get() = GetMenuExitButton;
+		public set(bool value) {
+			SetMenuExitButton(this, value);
+		}
+	}
+	property bool ExitBackButton {
+		public get() = GetMenuExitBackButton;
+		public set(bool value) {
+			SetMenuExitBackButton(this, value);
+		}
+	}
+
+	public SetNoVoteButton() = SetMenuNoVoteButton;
+	public SetVoteResultCallback() = SetVoteResultCallback;
+
+	property int ItemCount {
+		public get() = GetMenuItemCount;
+	}
+	property Handle Style {
+		public get() = GetMenuStyle;
+	}
+	property int SelectionPosition {
+		public get() {
+			return GetMenuSelectionPosition();
+		}
+	}
+}
 
 /**
  * Returns the number of seconds you should "wait" before displaying
@@ -11424,7 +11589,7 @@ native RedrawMenuItem(const String:text[]);
  * @return				True on success, false on failure.
  * @error				Invalid client index, or radio menus not supported.
  */
-native bool:InternalShowMenu(client, const String:str[], time, keys=-1, MenuHandler:handler=MenuHandler:-1);
+native bool:InternalShowMenu(client, const String:str[], time, keys=-1, MenuHandler:handler=INVALID_FUNCTION);
 
 /**
  * Retrieves voting information from MenuAction_VoteEnd.
@@ -11618,6 +11783,29 @@ native StopProfiling(Handle:prof);
  * @error			Invalid Handle.
  */
 native Float:GetProfilerTime(Handle:prof);
+
+/**
+ * Mark the start of a profiling event.
+ *
+ * @param group     Budget group. This can be "all" for a default, or a short
+ *                  description like "Timers" or "Events".
+ * @param name      A name to attribute to this profiling event.
+ * @noreturn
+ */
+native EnterProfilingEvent(const String:group[], const String:name[]);
+
+/**
+ * Mark the end of the last profiling event. This must be called in the same
+ * stack frame as StartProfilingEvent(). Not doing so, or throwing errors,
+ * will make the resulting profile very wrong.
+ */
+native LeaveProfilingEvent();
+
+/**
+ * Returns true if the global profiler is enabled; false otherwise. It is
+ * not necessary to call this before Enter/LeaveProfilingEvent.
+ */
+native bool:IsProfilingActive();
 /**
  * vim: set ts=4 :
  * =============================================================================
@@ -13079,8 +13267,9 @@ native SetVariantEntity(entity);
  * @param caller		Entity index of the caller.
  * @param activator		Entity index of the activator.
  * @param delay			Delay in seconds? before the event gets fired.
+ * @noreturn
  */
-functag public EntityOutput(const String:output[], caller, activator, Float:delay);
+typedef EntityOutput = function void (const char[] output, int caller, int activator, float delay);
 
 /**
  * Add an entity output hook on a entity classname
@@ -14016,7 +14205,16 @@ native Float:GetDistGainFromSoundLevel(soundlevel, Float:distance);
  * @return		Plugin_Continue to allow the sound to be played, Plugin_Stop to block it, 
  *			  Plugin_Changed when any parameter has been modified.
  */
-functag public Action:AmbientSHook(String:sample[PLATFORM_MAX_PATH], &entity, &Float:volume, &level, &pitch, Float:pos[3], &flags, &Float:delay);
+typedef AmbientSHook = function Action (
+  char sample[PLATFORM_MAX_PATH],
+  int &entity,
+  float &volume,
+  int &level,
+  int &pitch,
+  float pos[3],
+  int &flags,
+  float &delay
+);
 
 /**
  * Called when a sound is going to be emitted to one or more clients.
@@ -14034,7 +14232,17 @@ functag public Action:AmbientSHook(String:sample[PLATFORM_MAX_PATH], &entity, &F
  * @return			Plugin_Continue to allow the sound to be played, Plugin_Stop to block it, 
  *				  Plugin_Changed when any parameter has been modified.
  */
-functag public Action:NormalSHook(clients[64], &numClients, String:sample[PLATFORM_MAX_PATH], &entity, &channel, &Float:volume, &level, &pitch, &flags);
+typedef NormalSHook = function Action (
+  int clients[64],
+  int &numClients,
+  char sample[PLATFORM_MAX_PATH],
+  int &entity,
+  int &channel,
+  float &volume,
+  int &level,
+  int &pitch,
+  int &flags
+);
 
 /**
  * Hooks all played ambient sounds.
@@ -14709,7 +14917,7 @@ stock AddFileToDownloadsTable(const String:filename[])
  * @param delay		Delay in seconds to send the TE.
  * @return		Plugin_Continue to allow the transmission of the TE, Plugin_Stop to block it.
  */
-functag public Action:TEHook(const String:te_name[], const Players[], numClients, Float:delay);
+typedef TEHook = function Action (const char[] te_name, const int[] Players, int numClients, float delay);
 
 /**
  * Hooks a temp entity.
@@ -15946,7 +16154,7 @@ native SortStrings(String:array[][], array_size, SortOrder:order = Sort_Ascendin
  *						0 if first is equal to second
  *						1 if first should go after second
  */
-functag public SortFunc1D(elem1, elem2, const array[], Handle:hndl);
+typedef SortFunc1D = function int (int elem1, int elem2, const int[] array, Handle hndl);
 
 /** 
  * Sorts a custom 1D array.  You must pass in a comparison function.
@@ -16011,7 +16219,7 @@ native SortADTArray(Handle:array, SortOrder:order, SortType:type);
  *					0 if first is equal to second
  *					1 if first should go after second
  */
-functag public SortFuncADTArray(index1, index2, Handle:array, Handle:hndl);
+typedef SortFuncADTArray = function int (int index1, int index2, Handle array, Handle hndl);
 
 /**
  * Custom sorts an ADT Array. You must pass in a comparison function.
@@ -16021,7 +16229,8 @@ functag public SortFuncADTArray(index1, index2, Handle:array, Handle:hndl);
  * @param hndl			Optional Handle to pass through the comparison calls.
  * @noreturn
  */
-native SortADTArrayCustom(Handle:array, SortFuncADTArray:sortfunc, Handle:hndl=INVALID_HANDLE); /**
+native SortADTArrayCustom(Handle:array, SortFuncADTArray:sortfunc, Handle:hndl=INVALID_HANDLE); 
+/**
  * vim: set ts=4 :
  * =============================================================================
  * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
@@ -16063,11 +16272,11 @@ native SortADTArrayCustom(Handle:array, SortFuncADTArray:sortfunc, Handle:hndl=I
  */
 struct Plugin
 {
-   const String:name[],			/**< Plugin Name */
-   const String:description[],	/**< Plugin Description */
-   const String:author[],		/**< Plugin Author */
-   const String:version[],		/**< Plugin Version */
-   const String:url[],			/**< Plugin URL */
+   public const char[] name;		/**< Plugin Name */
+   public const char[] description;	/**< Plugin Description */
+   public const char[] author;		/**< Plugin Author */
+   public const char[] version;		/**< Plugin Version */
+   public const char[] url;			/**< Plugin URL */
 };
 
 #include <core>
@@ -16131,7 +16340,7 @@ public Plugin:myinfo;
  *
  * @noreturn
  */
-forward OnPluginStart();
+forward void OnPluginStart();
 
 /**
  * @deprecated Use AskPluginLoad2() instead.
@@ -16190,12 +16399,12 @@ forward OnGameFrame();
  * @note This used to be OnServerLoad(), which is now deprecated.
  * Plugins still using the old forward will work.
  */
-forward OnMapStart();
+forward void OnMapStart();
 
 /**
  * Called right before a map ends.
  */
-forward OnMapEnd();
+forward void OnMapEnd();
 
 /**
  * Called when the map has loaded, servercfgfile (server.cfg) has been 
@@ -16207,7 +16416,7 @@ forward OnMapEnd();
  *
  * @noreturn
  */
-forward OnConfigsExecuted();
+forward void OnConfigsExecuted();
 
 /**
  * This is called once, right after OnMapStart() but any time before 
@@ -16224,20 +16433,20 @@ forward OnConfigsExecuted();
  *
  * @noreturn
  */
-forward OnAutoConfigsBuffered();
+forward void OnAutoConfigsBuffered();
 
 /**
  * @deprecated Use OnConfigsExecuted() instead.
  */
 #pragma deprecated Use OnConfigsExecuted() instead
-forward OnServerCfg();
+forward void OnServerCfg();
 
 /**
  * Called after all plugins have been loaded.  This is called once for 
  * every plugin.  If a plugin late loads, it will be called immediately 
  * after OnPluginStart().
  */
-forward OnAllPluginsLoaded();
+forward void OnAllPluginsLoaded();
 
 /**
  * Returns the calling plugin's Handle.
@@ -16484,7 +16693,7 @@ native GetExtensionFileStatus(const String:name[], String:error[]="", maxlength=
  *
  * @param name			Library name.
  */
-forward OnLibraryAdded(const String:name[]);
+forward void OnLibraryAdded(const String:name[]);
 
 /**
  * Called right before a library is removed that the current plugin references 
@@ -16493,7 +16702,7 @@ forward OnLibraryAdded(const String:name[]);
  *
  * @param name			Library name.
  */
-forward OnLibraryRemoved(const String:name[]);
+forward void OnLibraryRemoved(const String:name[]);
 
 #define MAPLIST_FLAG_MAPSFOLDER		(1<<0)		/**< On failure, use all maps in the maps folder. */
 #define MAPLIST_FLAG_CLEARARRAY		(1<<1)		/**< If an input array is specified, clear it before adding. */
@@ -16587,7 +16796,7 @@ forward bool:OnClientFloodCheck(client);
  * @param blocked		True if client flooded last "say", false otherwise.
  * @noreturn
  */
-forward OnClientFloodResult(client, bool:blocked);
+forward void OnClientFloodResult(client, bool:blocked);
 
 /**
  * Feature types.
@@ -17263,281 +17472,6 @@ stock ImplodeStrings(const String:strings[][], numStrings, const String:join[], 
 	return total;
 }
 /**
- * vim: set ts=4 sw=4 tw=99 noet :
- * =============================================================================
- * SourceMod (C)2004-2014 AlliedModders LLC.  All rights reserved.
- * =============================================================================
- *
- * This file is part of the SourceMod/SourcePawn SDK.
- *
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the GNU General Public License, version 3.0, as published by the
- * Free Software Foundation.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * As a special exception, AlliedModders LLC gives you permission to link the
- * code of this program (as well as its derivative works) to "Half-Life 2," the
- * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
- * by the Valve Corporation.  You must obey the GNU General Public License in
- * all respects for all other code used.  Additionally, AlliedModders LLC grants
- * this exception to all derivative works.  AlliedModders LLC defines further
- * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
- * or <http://www.sourcemod.net/license.php>.
- *
- * Version: $Id$
- */
-
-static TestNumber = 0;
-static String:TestContext[255];
-
-SetTestContext(const String:context[])
-{
-	strcopy(TestContext, sizeof(TestContext), context);
-}
-
-AssertEq(const String:text[], cell1, cell2)
-{
-	TestNumber++;
-	if (cell1 == cell2) {
-		PrintToServer("[%d] %s: %s == %d OK", TestNumber, TestContext, text, cell2);
-	} else {
-		PrintToServer("[%d] %s FAIL: %s should be %d, got %d", TestNumber, TestContext, text, cell2, cell1);
-		ThrowError("test %d (%s in %s) failed", TestNumber, text, TestContext);
-	}
-}
-
-AssertFalse(const String:text[], bool:value)
-{
-	TestNumber++;
-	if (!value) {
-		PrintToServer("[%d] %s: %s == false OK", TestNumber, TestContext, text, value);
-	} else {
-		PrintToServer("[%d] %s FAIL: %s should be false, got true", TestNumber, TestContext, text);
-		ThrowError("test %d (%s in %s) failed", TestNumber, text, TestContext);
-	}
-}
-
-AssertTrue(const String:text[], bool:value)
-{
-	TestNumber++;
-	if (value) {
-		PrintToServer("[%d] %s: %s == true OK", TestNumber, TestContext, text, value);
-	} else {
-		PrintToServer("[%d] %s FAIL: %s should be true, got false", TestNumber, TestContext, text);
-		ThrowError("test %d (%s in %s) failed", TestNumber, text, TestContext);
-	}
-}
-/**
- * vim: set ts=4 :
- * =============================================================================
- * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
- * =============================================================================
- *
- * This file is part of the SourceMod/SourcePawn SDK.
- *
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the GNU General Public License, version 3.0, as published by the
- * Free Software Foundation.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * As a special exception, AlliedModders LLC gives you permission to link the
- * code of this program (as well as its derivative works) to "Half-Life 2," the
- * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
- * by the Valve Corporation.  You must obey the GNU General Public License in
- * all respects for all other code used.  Additionally, AlliedModders LLC grants
- * this exception to all derivative works.  AlliedModders LLC defines further
- * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
- * or <http://www.sourcemod.net/license.php>.
- *
- * Version: $Id$
- */
- 
-#if defined _textparse_included
- #endinput
-#endif
-#define _textparse_included
-
-
-/********************************
- * Everything below describes the SMC Parse, or "SourceMod Configuration" format.
- * This parser is entirely event based.  You must hook events to receive data.
- * The file format itself is nearly identical to Valve's KeyValues format.
- ********************************/
-
-/**
- * Parse result directive.
- */
-enum SMCResult
-{
-	SMCParse_Continue,			/**< Continue parsing */
-	SMCParse_Halt,				/**< Stop parsing here */
-	SMCParse_HaltFail			/**< Stop parsing and return failure */
-};
-
-/**
- * Parse error codes.
- */
-enum SMCError
-{
-	SMCError_Okay = 0,			/**< No error */
-	SMCError_StreamOpen,		/**< Stream failed to open */
-	SMCError_StreamError,		/**< The stream died... somehow */
-	SMCError_Custom,			/**< A custom handler threw an error */
-	SMCError_InvalidSection1,	/**< A section was declared without quotes, and had extra tokens */
-	SMCError_InvalidSection2,	/**< A section was declared without any header */
-	SMCError_InvalidSection3,	/**< A section ending was declared with too many unknown tokens */
-	SMCError_InvalidSection4,	/**< A section ending has no matching beginning */
-	SMCError_InvalidSection5,	/**< A section beginning has no matching ending */
-	SMCError_InvalidTokens,		/**< There were too many unidentifiable strings on one line */
-	SMCError_TokenOverflow,		/**< The token buffer overflowed */
-	SMCError_InvalidProperty1,	/**< A property was declared outside of any section */
-};
-
-/**
- * Creates a new SMC file format parser.  This is used to set parse hooks.
- *
- * @return			A new Handle to an SMC Parse structure.
- */
-native Handle:SMC_CreateParser();
-
-/**
- * Parses an SMC file.
- *
- * @param smc			A Handle to an SMC Parse structure.
- * @param file			A string containing the file path.
- * @param line			An optional by reference cell to store the last line number read.
- * @param col			An optional by reference cell to store the last column number read.
- * @return				An SMCParseError result.
- * @error				Invalid or corrupt Handle. 
- */
-native SMCError:SMC_ParseFile(Handle:smc, const String:file[], &line=0, &col=0);
-
-/**
- * Gets an error string for an SMCError code.
- * @note SMCError_Okay returns false.
- * @note SMCError_Custom (which is thrown on SMCParse_HaltFail) returns false.
- *
- * @param error			The SMCParseError code.
- * @param buffer		A string buffer for the error (contents undefined on failure).
- * @param buf_max		The maximum size of the buffer.
- * @return				True on success, false otherwise.
- */
-native bool:SMC_GetErrorString(SMCError:error, String:buffer[], buf_max);
-
-/**
- * Called when parsing is started.
- *
- * @param smc			The SMC Parse Handle.
- * @noreturn
- */
-functag public SMC_ParseStart(Handle:smc);
-
-/**
- * Sets the SMC_ParseStart function of a parse Handle.
- *
- * @param smc			Handle to an SMC Parse.
- * @param func			SMC_ParseStart function.
- * @noreturn
- * @error				Invalid or corrupt Handle. 
- */
-native SMC_SetParseStart(Handle:smc, SMC_ParseStart:func);
-
-/**
- * Called when parsing is halted.
- *
- * @param smc			The SMC Parse Handle.
- * @param halted		True if abnormally halted, false otherwise.
- * @param failed		True if parsing failed, false otherwise.
- * @noreturn
- */
-functag public SMC_ParseEnd(Handle:smc, bool:halted, bool:failed);
-
-/**
- * Sets the SMC_ParseEnd of a parse handle.
- *
- * @param smc			Handle to an SMC Parse.
- * @param func			SMC_ParseEnd function.
- * @noreturn
- * @error				Invalid or corrupt Handle. 
- */
-native SMC_SetParseEnd(Handle:smc, SMC_ParseEnd:func);
-
-/**
- * Called when the parser is entering a new section or sub-section.
- * @note Enclosing quotes are always stripped.
- *
- * @param smc			The SMC Parse Handle.
- * @param name			String containing section name.
- * @param opt_quotes	True if the section name was quote-enclosed in the file.
- * @return				An SMCResult action to take.
- */
-functag public SMCResult:SMC_NewSection(Handle:smc, const String:name[], bool:opt_quotes);
-
-/**
- * Called when the parser finds a new key/value pair.
- * @note Enclosing quotes are always stripped.
- *
- * @param smc			The SMC Parse Handle.
- * @param key			String containing key name.
- * @param value			String containing value name.
- * @param key_quotes	Whether or not the key was enclosed in quotes.
- * @param value_quotes	Whether or not the value was enclosed in quotes.
- * @return				An SMCResult action to take.
- */
-functag public SMCResult:SMC_KeyValue(Handle:smc, const String:key[], const String:value[], bool:key_quotes, bool:value_quotes);
-
-/**
- * Called when the parser finds the end of the current section.
- *
- * @param smc			The SMC Parse Handle.
- * @return				An SMCResult action to take.
- */
-functag public SMCResult:SMC_EndSection(Handle:smc);
-
-/**
- * Sets the three main reader functions.
- *
- * @param smc			An SMC parse Handle.
- * @param ns			An SMC_NewSection function pointer.
- * @param kv			An SMC_KeyValue function pointer.
- * @param es			An SMC_EndSection function pointer.
- * @noreturn
- */
-native SMC_SetReaders(Handle:smc, SMC_NewSection:ns, SMC_KeyValue:kv, SMC_EndSection:es);
-
-/**
- * Called whenever a raw line is read.
- *
- * @param smc			The SMC Parse Handle.
- * @param line			A string containing the raw line from the file.
- * @param lineno		The line number it occurs on.
- * @return				An SMCResult action to take.
- */
-functag public SMCResult:SMC_RawLine(Handle:smc, const String:line[], lineno);
-
-/**
- * Sets a raw line reader on an SMC parser Handle.
- *
- * @param smc			Handle to an SMC Parse.
- * @param func			SMC_RawLine function.
- * @noreturn
- */
-native SMC_SetRawLine(Handle:smc, SMC_RawLine:func);
-/**
  * vim: set ts=4 :
  * =============================================================================
  * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
@@ -17793,12 +17727,12 @@ native TF2_SetPlayerPowerPlay(client, bool:enabled);
  *
  * @param client		Player's index.
  * @param team			Team to disguise the player as (only TFTeam_Red and TFTeam_Blue have an effect)
- * @param class			TFClassType class to disguise the player as
+ * @param classType		TFClassType class to disguise the player as
  * @param target		Specific target player to disguise as (0 for any)
  * @noreturn
  * @error				Invalid client index, client not in game, or no mod support.
  */
-native TF2_DisguisePlayer(client, TFTeam:team, TFClassType:class, target=0);
+native TF2_DisguisePlayer(client, TFTeam:team, TFClassType:classType, target=0);
 
 /**
  * Removes the current disguise from a client. Only has an effect on spies.
@@ -17988,6 +17922,209 @@ public __ext_tf2_SetNTVOptional()
 	MarkNativeAsOptional("TF2_IsHolidayActive");
 }
 #endif
+/**
+ * vim: set ts=4 :
+ * =============================================================================
+ * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+ * =============================================================================
+ *
+ * This file is part of the SourceMod/SourcePawn SDK.
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, version 3.0, as published by the
+ * Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, AlliedModders LLC gives you permission to link the
+ * code of this program (as well as its derivative works) to "Half-Life 2," the
+ * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+ * by the Valve Corporation.  You must obey the GNU General Public License in
+ * all respects for all other code used.  Additionally, AlliedModders LLC grants
+ * this exception to all derivative works.  AlliedModders LLC defines further
+ * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+ * or <http://www.sourcemod.net/license.php>.
+ *
+ * Version: $Id$
+ */
+ 
+#if defined _textparse_included
+ #endinput
+#endif
+#define _textparse_included
+
+
+/********************************
+ * Everything below describes the SMC Parse, or "SourceMod Configuration" format.
+ * This parser is entirely event based.  You must hook events to receive data.
+ * The file format itself is nearly identical to Valve's KeyValues format.
+ ********************************/
+
+/**
+ * Parse result directive.
+ */
+enum SMCResult
+{
+	SMCParse_Continue,			/**< Continue parsing */
+	SMCParse_Halt,				/**< Stop parsing here */
+	SMCParse_HaltFail			/**< Stop parsing and return failure */
+};
+
+/**
+ * Parse error codes.
+ */
+enum SMCError
+{
+	SMCError_Okay = 0,			/**< No error */
+	SMCError_StreamOpen,		/**< Stream failed to open */
+	SMCError_StreamError,		/**< The stream died... somehow */
+	SMCError_Custom,			/**< A custom handler threw an error */
+	SMCError_InvalidSection1,	/**< A section was declared without quotes, and had extra tokens */
+	SMCError_InvalidSection2,	/**< A section was declared without any header */
+	SMCError_InvalidSection3,	/**< A section ending was declared with too many unknown tokens */
+	SMCError_InvalidSection4,	/**< A section ending has no matching beginning */
+	SMCError_InvalidSection5,	/**< A section beginning has no matching ending */
+	SMCError_InvalidTokens,		/**< There were too many unidentifiable strings on one line */
+	SMCError_TokenOverflow,		/**< The token buffer overflowed */
+	SMCError_InvalidProperty1,	/**< A property was declared outside of any section */
+};
+
+/**
+ * Creates a new SMC file format parser.  This is used to set parse hooks.
+ *
+ * @return			A new Handle to an SMC Parse structure.
+ */
+native Handle:SMC_CreateParser();
+
+/**
+ * Parses an SMC file.
+ *
+ * @param smc			A Handle to an SMC Parse structure.
+ * @param file			A string containing the file path.
+ * @param line			An optional by reference cell to store the last line number read.
+ * @param col			An optional by reference cell to store the last column number read.
+ * @return				An SMCParseError result.
+ * @error				Invalid or corrupt Handle. 
+ */
+native SMCError:SMC_ParseFile(Handle:smc, const String:file[], &line=0, &col=0);
+
+/**
+ * Gets an error string for an SMCError code.
+ * @note SMCError_Okay returns false.
+ * @note SMCError_Custom (which is thrown on SMCParse_HaltFail) returns false.
+ *
+ * @param error			The SMCParseError code.
+ * @param buffer		A string buffer for the error (contents undefined on failure).
+ * @param buf_max		The maximum size of the buffer.
+ * @return				True on success, false otherwise.
+ */
+native bool:SMC_GetErrorString(SMCError:error, String:buffer[], buf_max);
+
+/**
+ * Called when parsing is started.
+ *
+ * @param smc			The SMC Parse Handle.
+ * @noreturn
+ */
+typedef SMC_ParseStart = function void (Handle smc);
+
+/**
+ * Sets the SMC_ParseStart function of a parse Handle.
+ *
+ * @param smc			Handle to an SMC Parse.
+ * @param func			SMC_ParseStart function.
+ * @noreturn
+ * @error				Invalid or corrupt Handle. 
+ */
+native SMC_SetParseStart(Handle:smc, SMC_ParseStart:func);
+
+/**
+ * Called when parsing is halted.
+ *
+ * @param smc			The SMC Parse Handle.
+ * @param halted		True if abnormally halted, false otherwise.
+ * @param failed		True if parsing failed, false otherwise.
+ * @noreturn
+ */
+typedef SMC_ParseEnd = function void (Handle smc, bool halted, bool failed);
+
+/**
+ * Sets the SMC_ParseEnd of a parse handle.
+ *
+ * @param smc			Handle to an SMC Parse.
+ * @param func			SMC_ParseEnd function.
+ * @noreturn
+ * @error				Invalid or corrupt Handle. 
+ */
+native SMC_SetParseEnd(Handle:smc, SMC_ParseEnd:func);
+
+/**
+ * Called when the parser is entering a new section or sub-section.
+ * @note Enclosing quotes are always stripped.
+ *
+ * @param smc			The SMC Parse Handle.
+ * @param name			String containing section name.
+ * @param opt_quotes	True if the section name was quote-enclosed in the file.
+ * @return				An SMCResult action to take.
+ */
+typedef SMC_NewSection = function SMCResult (Handle smc, const char[] name, bool opt_quotes);
+
+/**
+ * Called when the parser finds a new key/value pair.
+ * @note Enclosing quotes are always stripped.
+ *
+ * @param smc			The SMC Parse Handle.
+ * @param key			String containing key name.
+ * @param value			String containing value name.
+ * @param key_quotes	Whether or not the key was enclosed in quotes.
+ * @param value_quotes	Whether or not the value was enclosed in quotes.
+ * @return				An SMCResult action to take.
+ */
+typedef SMC_KeyValue = function SMCResult (Handle smc, const char[] key, const char[] value, bool key_quotes, bool value_quotes);
+
+/**
+ * Called when the parser finds the end of the current section.
+ *
+ * @param smc			The SMC Parse Handle.
+ * @return				An SMCResult action to take.
+ */
+typedef SMC_EndSection = function SMCResult (Handle smc);
+
+/**
+ * Sets the three main reader functions.
+ *
+ * @param smc			An SMC parse Handle.
+ * @param ns			An SMC_NewSection function pointer.
+ * @param kv			An SMC_KeyValue function pointer.
+ * @param es			An SMC_EndSection function pointer.
+ * @noreturn
+ */
+native SMC_SetReaders(Handle:smc, SMC_NewSection:ns, SMC_KeyValue:kv, SMC_EndSection:es);
+
+/**
+ * Called whenever a raw line is read.
+ *
+ * @param smc			The SMC Parse Handle.
+ * @param line			A string containing the raw line from the file.
+ * @param lineno		The line number it occurs on.
+ * @return				An SMCResult action to take.
+ */
+typedef SMC_RawLine = function SMCResult (Handle smc, const char[] line, int lineno);
+
+/**
+ * Sets a raw line reader on an SMC parser Handle.
+ *
+ * @param smc			Handle to an SMC Parse.
+ * @param func			SMC_RawLine function.
+ * @noreturn
+ */
+native SMC_SetRawLine(Handle:smc, SMC_RawLine:func);
 /**
  * vim: set ts=4 :
  * =============================================================================
@@ -18325,19 +18462,19 @@ stock TFClassType:TF2_GetPlayerClass(client)
  * Note: If setting player class in a player spawn hook weapons should be set to false.
  *
  * @param client		Player's index.
- * @param class			TFClassType class symbol.
+ * @param classType		TFClassType class symbol.
  * @param weapons		This paramater is ignored.
  * @param persistent	If true changes the players desired class so the change stays after death.
  * @noreturn
  * @error				Invalid client index.
  */
-stock TF2_SetPlayerClass(client, TFClassType:class, bool:weapons=true, bool:persistent=true)
+stock TF2_SetPlayerClass(client, TFClassType:classType, bool:weapons=true, bool:persistent=true)
 {
-	SetEntProp(client, Prop_Send, "m_iClass", _:class);
+	SetEntProp(client, Prop_Send, "m_iClass", _:classType);
 	
 	if (persistent)
 	{
-		SetEntProp(client, Prop_Send, "m_iDesiredPlayerClass", _:class);
+		SetEntProp(client, Prop_Send, "m_iDesiredPlayerClass", _:classType);
 	}
 }
 
@@ -18581,6 +18718,322 @@ stock TFObjectMode:TF2_GetObjectMode(entity)
  *
  * Version: $Id$
  */
+ 
+#if defined _topmenus_included
+ #endinput
+#endif
+#define _topmenus_included
+
+#include <menus>
+
+/**
+ * Actions a top menu will take on an topobj.
+ */
+enum TopMenuAction
+{
+	/**
+	 * An option is being drawn for a menu (or for sorting purposes).
+	 *
+	 * INPUT : TopMenu Handle, topobj ID, client index.
+	 * OUTPUT: Buffer for rendering, maxlength of buffer.
+	 */
+	TopMenuAction_DisplayOption = 0,
+	
+	/**
+	 * The title of a menu is being drawn for a given topobj.
+	 *
+	 * Note: The Object ID will be INVALID_TOPMENUOBJECT if drawing the 
+	 * root title.  Otherwise, the Object ID is a category.
+	 *
+	 * INPUT : TopMenu Handle, topobj ID, client index.
+	 * OUTPUT: Buffer for rendering, maxlength of buffer.
+	 */
+	TopMenuAction_DisplayTitle = 1,
+	
+	/**
+	 * A menu option has been selected.
+	 *
+	 * The Object ID will always be an item (not a category).
+	 *
+	 * INPUT : TopMenu Handle, topobj ID, client index.
+	 */
+	TopMenuAction_SelectOption = 2,
+
+	/**
+	 * A menu option is being drawn and its flags can be overridden.
+	 *
+	 * INPUT : TopMenu Handle, topobj ID, client index.
+	 * OUTPUT: The first byte of the 'buffer' string should be set 
+	 *		   to the desired flags.  By default, it will contain
+	 *		   ITEMDRAW_DEFAULT.
+	 */
+	 TopMenuAction_DrawOption = 3,
+	 
+	/**
+	 * Called when an topobj is being removed from the menu.
+	 * This can be used to clean up data stored in the info string.
+	 *
+	 * INPUT : TopMenu Handle, topobj ID.
+	 */
+	 TopMenuAction_RemoveObject = 4,
+};
+
+/**
+ * Top menu topobj types.
+ */
+enum TopMenuObjectType
+{
+	TopMenuObject_Category = 0,			/**< Category (sub-menu branching from root) */
+	TopMenuObject_Item = 1				/**< Item on a sub-menu */
+};
+
+/**
+ * Top menu starting positions for display.
+ */
+enum TopMenuPosition
+{
+	TopMenuPosition_Start = 0,			/**< Start/root of the menu */
+	TopMenuPosition_LastRoot = 1,		/**< Last position in the root menu */
+	TopMenuPosition_LastCategory = 3,	/**< Last position in their last category */
+};
+
+/**
+ * Top menu topobj tag for type checking.
+ */
+enum TopMenuObject
+{
+	INVALID_TOPMENUOBJECT = 0,
+};
+
+/**
+ * TopMenu callback prototype.
+ *
+ * @param topmenu			Handle to the TopMenu.
+ * @param action			TopMenuAction being performed.
+ * @param topobj_id			The topobj ID (if used).
+ * @param param				Extra parameter (if used).
+ * @param buffer			Output buffer (if used).
+ * @param maxlength			Output buffer (if used).
+ * @noreturn
+ */
+typedef TopMenuHandler = function void (
+  Handle topmenu, 
+  TopMenuAction action,
+  TopMenuObject topobj_id,
+  int param,
+  char[] buffer,
+  int maxlength
+);
+
+/**
+ * Creates a TopMenu.
+ *
+ * @param handler			Handler to use for drawing the root title.
+ * @return					A new TopMenu Handle, or INVALID_HANDLE on failure.
+ */						  
+native Handle:CreateTopMenu(TopMenuHandler:handler);
+
+/**
+ * Re-sorts the items in a TopMenu via a configuration file.
+ *
+ * The format of the configuration file should be a Valve Key-Values 
+ * formatted file that SourceMod can parse.  There should be one root 
+ * section, and one sub-section for each category.  Each sub-section's 
+ * name should match the category name.
+ *
+ * Each sub-section may only contain key/value pairs in the form of:
+ * key: "item"
+ * value: Name of the item as passed to AddToTopMenu().
+ *
+ * The TopMenu will draw items in the order declared in the configuration 
+ * file.  If items do not appear in the configuration file, they are sorted 
+ * per-player based on how the handler function renders for that player.  
+ * These items appear after the configuration sorted items.
+ *
+ * @param topmenu			TopMenu Handle.
+ * @param file				File path.
+ * @param error				Error buffer.
+ * @param maxlength			Maximum size of the error buffer.
+ *							Error buffer will be filled with a 
+ *							zero-terminated string if false is 
+ *							returned.
+ * @return					True on success, false on failure.
+ * @error					Invalid TopMenu Handle.
+ */
+native bool:LoadTopMenuConfig(Handle:topmenu, const String:file[], String:error[], maxlength);
+
+/**
+ * Adds an topobj to a TopMenu.
+ *
+ * @param topmenu			TopMenu Handle.
+ * @param name				Object name (MUST be unique).
+ * @param type				Object type.
+ * @param handler			Handler for topobj.
+ * @param parent			Parent topobj ID, or INVALID_TOPMENUOBJECT for none.
+ *							Items must have a category parent.
+ *							Categories must not have a parent.
+ * @param cmdname			Command name (for access overrides).
+ * @param flags				Default access flags.
+ * @param info_string		Arbitrary storage (max 255 bytes).
+ * @return					A new TopMenuObject ID, or INVALID_TOPMENUOBJECT on
+ *							failure.
+ * @error					Invalid TopMenu Handle.
+ */
+native TopMenuObject:AddToTopMenu(Handle:topmenu,
+								  const String:name[],
+								  TopMenuObjectType:type,
+								  TopMenuHandler:handler,
+								  TopMenuObject:parent,
+								  const String:cmdname[]="",
+								  flags=0,
+								  const String:info_string[]="");
+								  
+/**
+ * Retrieves the info string of a top menu item.
+ *
+ * @param topmenu			TopMenu Handle.
+ * @param parent			TopMenuObject ID.
+ * @param buffer			Buffer to store info string.
+ * @param maxlength			Maximum size of info string.
+ * @return					Number of bytes written, not including the 
+ *							null terminator.
+ * @error					Invalid TopMenu Handle or TopMenuObject ID.
+ */
+native GetTopMenuInfoString(Handle:topmenu, TopMenuObject:parent, String:buffer[], maxlength);
+
+/**
+ * Retrieves the name string of a top menu item.
+ *
+ * @param topmenu			TopMenu Handle.
+ * @param topobj			TopMenuObject ID.
+ * @param buffer			Buffer to store info string.
+ * @param maxlength			Maximum size of info string.
+ * @return					Number of bytes written, not including the 
+ *							null terminator.
+ * @error					Invalid TopMenu Handle or TopMenuObject ID.
+ */
+native GetTopMenuObjName(Handle:topmenu, TopMenuObject:topobj, String:buffer[], maxlength);
+
+/**
+ * Removes an topobj from a TopMenu.
+ *
+ * Plugins' topobjs are automatically removed all TopMenus when the given 
+ * plugin unloads or pauses.  In the case of unpausing, all items are restored.
+ *
+ * @param topmenu			TopMenu Handle.
+ * @param topobj			TopMenuObject ID.
+ * @noreturn
+ * @error					Invalid TopMenu Handle.
+ */
+native RemoveFromTopMenu(Handle:topmenu, TopMenuObject:topobj);
+
+/**
+ * Displays a TopMenu to a client.
+ *
+ * @param topmenu			TopMenu Handle.
+ * @param client			Client index.
+ * @param position			Position to display from.
+ * @return					True on success, false on failure.
+ * @error					Invalid TopMenu Handle or client not in game.
+ */
+native bool:DisplayTopMenu(Handle:topmenu, client, TopMenuPosition:position);
+
+/**
+ * Displays a TopMenu category to a client.
+ *
+ * @param topmenu			TopMenu Handle.
+ * @param category		Category topobj id.
+ * @param client			Client index.
+ * @return					True on success, false on failure.
+ * @error					Invalid TopMenu Handle or client not in game.
+ */
+native bool:DisplayTopMenuCategory(Handle:topmenu, TopMenuObject:category, client);
+
+/**
+ * Finds a category's topobj ID in a TopMenu.
+ *
+ * @param topmenu			TopMenu Handle.
+ * @param name				Object's unique name.
+ * @return					TopMenuObject ID on success, or 
+ *							INVALID_TOPMENUOBJECT on failure.
+ * @error					Invalid TopMenu Handle.
+ */
+native TopMenuObject:FindTopMenuCategory(Handle:topmenu, const String:name[]);
+
+/**
+ * Change the menu title caching behaviour of the TopMenu. By default the titles are cached to reduce overhead.
+ * If you need dynamic menu titles, which can change everytime the menu is displayed to a user, set this to false.
+ *
+ * @param topmenu       TopMenu Handle.
+ * @param cache_titles  Cache the menu titles and don't call the handler with TopMenuAction_DisplayTitle everytime the menu is drawn?
+ * @noreturn
+ * @error               Invalid TopMenu Handle
+ */
+native SetTopMenuTitleCaching(Handle:topmenu, bool:cache_titles);
+
+/**
+ * Do not edit below this line!
+ */
+public Extension:__ext_topmenus = 
+{
+	name = "TopMenus",
+	file = "topmenus.ext",
+#if defined AUTOLOAD_EXTENSIONS
+	autoload = 1,
+#else
+	autoload = 0,
+#endif
+#if defined REQUIRE_EXTENSIONS
+	required = 1,
+#else
+	required = 0,
+#endif
+};
+
+#if !defined REQUIRE_EXTENSIONS
+public __ext_topmenus_SetNTVOptional()
+{
+	MarkNativeAsOptional("CreateTopMenu");
+	MarkNativeAsOptional("LoadTopMenuConfig");
+	MarkNativeAsOptional("AddToTopMenu");
+	MarkNativeAsOptional("RemoveFromTopMenu");
+	MarkNativeAsOptional("DisplayTopMenu");
+	MarkNativeAsOptional("DisplayTopMenuCategory");
+	MarkNativeAsOptional("FindTopMenuCategory");
+	MarkNativeAsOptional("SetTopMenuTitleCaching");
+}
+#endif
+/**
+ * vim: set ts=4 :
+ * =============================================================================
+ * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+ * =============================================================================
+ *
+ * This file is part of the SourceMod/SourcePawn SDK.
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, version 3.0, as published by the
+ * Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, AlliedModders LLC gives you permission to link the
+ * code of this program (as well as its derivative works) to "Half-Life 2," the
+ * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+ * by the Valve Corporation.  You must obey the GNU General Public License in
+ * all respects for all other code used.  Additionally, AlliedModders LLC grants
+ * this exception to all derivative works.  AlliedModders LLC defines further
+ * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+ * or <http://www.sourcemod.net/license.php>.
+ *
+ * Version: $Id$
+ */
 
 #if defined _timers_included
  #endinput
@@ -18793,320 +19246,6 @@ stock Handle:CreateDataTimer(Float:interval, Timer:func, &Handle:datapack, flags
  * Version: $Id$
  */
  
-#if defined _topmenus_included
- #endinput
-#endif
-#define _topmenus_included
-
-#include <menus>
-
-/**
- * Actions a top menu will take on an object.
- */
-enum TopMenuAction
-{
-	/**
-	 * An option is being drawn for a menu (or for sorting purposes).
-	 *
-	 * INPUT : TopMenu Handle, object ID, client index.
-	 * OUTPUT: Buffer for rendering, maxlength of buffer.
-	 */
-	TopMenuAction_DisplayOption = 0,
-	
-	/**
-	 * The title of a menu is being drawn for a given object.
-	 *
-	 * Note: The Object ID will be INVALID_TOPMENUOBJECT if drawing the 
-	 * root title.  Otherwise, the Object ID is a category.
-	 *
-	 * INPUT : TopMenu Handle, object ID, client index.
-	 * OUTPUT: Buffer for rendering, maxlength of buffer.
-	 */
-	TopMenuAction_DisplayTitle = 1,
-	
-	/**
-	 * A menu option has been selected.
-	 *
-	 * The Object ID will always be an item (not a category).
-	 *
-	 * INPUT : TopMenu Handle, object ID, client index.
-	 */
-	TopMenuAction_SelectOption = 2,
-
-	/**
-	 * A menu option is being drawn and its flags can be overridden.
-	 *
-	 * INPUT : TopMenu Handle, object ID, client index.
-	 * OUTPUT: The first byte of the 'buffer' string should be set 
-	 *		   to the desired flags.  By default, it will contain
-	 *		   ITEMDRAW_DEFAULT.
-	 */
-	 TopMenuAction_DrawOption = 3,
-	 
-	/**
-	 * Called when an object is being removed from the menu.
-	 * This can be used to clean up data stored in the info string.
-	 *
-	 * INPUT : TopMenu Handle, object ID.
-	 */
-	 TopMenuAction_RemoveObject = 4,
-};
-
-/**
- * Top menu object types.
- */
-enum TopMenuObjectType
-{
-	TopMenuObject_Category = 0,			/**< Category (sub-menu branching from root) */
-	TopMenuObject_Item = 1				/**< Item on a sub-menu */
-};
-
-/**
- * Top menu starting positions for display.
- */
-enum TopMenuPosition
-{
-	TopMenuPosition_Start = 0,			/**< Start/root of the menu */
-	TopMenuPosition_LastRoot = 1,		/**< Last position in the root menu */
-	TopMenuPosition_LastCategory = 3,	/**< Last position in their last category */
-};
-
-/**
- * Top menu object tag for type checking.
- */
-enum TopMenuObject
-{
-	INVALID_TOPMENUOBJECT = 0,
-};
-
-/**
- * TopMenu callback prototype.
- *
- * @param topmenu			Handle to the TopMenu.
- * @param action			TopMenuAction being performed.
- * @param object_id			The object ID (if used).
- * @param param				Extra parameter (if used).
- * @param buffer			Output buffer (if used).
- * @param maxlength			Output buffer (if used).
- * @noreturn
- */
-functag public TopMenuHandler(Handle:topmenu, 
-							  TopMenuAction:action,
-							  TopMenuObject:object_id,
-							  param,
-							  String:buffer[],
-							  maxlength);
-
-/**
- * Creates a TopMenu.
- *
- * @param handler			Handler to use for drawing the root title.
- * @return					A new TopMenu Handle, or INVALID_HANDLE on failure.
- */						  
-native Handle:CreateTopMenu(TopMenuHandler:handler);
-
-/**
- * Re-sorts the items in a TopMenu via a configuration file.
- *
- * The format of the configuration file should be a Valve Key-Values 
- * formatted file that SourceMod can parse.  There should be one root 
- * section, and one sub-section for each category.  Each sub-section's 
- * name should match the category name.
- *
- * Each sub-section may only contain key/value pairs in the form of:
- * key: "item"
- * value: Name of the item as passed to AddToTopMenu().
- *
- * The TopMenu will draw items in the order declared in the configuration 
- * file.  If items do not appear in the configuration file, they are sorted 
- * per-player based on how the handler function renders for that player.  
- * These items appear after the configuration sorted items.
- *
- * @param topmenu			TopMenu Handle.
- * @param file				File path.
- * @param error				Error buffer.
- * @param maxlength			Maximum size of the error buffer.
- *							Error buffer will be filled with a 
- *							zero-terminated string if false is 
- *							returned.
- * @return					True on success, false on failure.
- * @error					Invalid TopMenu Handle.
- */
-native bool:LoadTopMenuConfig(Handle:topmenu, const String:file[], String:error[], maxlength);
-
-/**
- * Adds an object to a TopMenu.
- *
- * @param topmenu			TopMenu Handle.
- * @param name				Object name (MUST be unique).
- * @param type				Object type.
- * @param handler			Handler for object.
- * @param parent			Parent object ID, or INVALID_TOPMENUOBJECT for none.
- *							Items must have a category parent.
- *							Categories must not have a parent.
- * @param cmdname			Command name (for access overrides).
- * @param flags				Default access flags.
- * @param info_string		Arbitrary storage (max 255 bytes).
- * @return					A new TopMenuObject ID, or INVALID_TOPMENUOBJECT on
- *							failure.
- * @error					Invalid TopMenu Handle.
- */
-native TopMenuObject:AddToTopMenu(Handle:topmenu,
-								  const String:name[],
-								  TopMenuObjectType:type,
-								  TopMenuHandler:handler,
-								  TopMenuObject:parent,
-								  const String:cmdname[]="",
-								  flags=0,
-								  const String:info_string[]="");
-								  
-/**
- * Retrieves the info string of a top menu item.
- *
- * @param topmenu			TopMenu Handle.
- * @param parent			TopMenuObject ID.
- * @param buffer			Buffer to store info string.
- * @param maxlength			Maximum size of info string.
- * @return					Number of bytes written, not including the 
- *							null terminator.
- * @error					Invalid TopMenu Handle or TopMenuObject ID.
- */
-native GetTopMenuInfoString(Handle:topmenu, TopMenuObject:parent, String:buffer[], maxlength);
-
-/**
- * Retrieves the name string of a top menu item.
- *
- * @param topmenu			TopMenu Handle.
- * @param object			TopMenuObject ID.
- * @param buffer			Buffer to store info string.
- * @param maxlength			Maximum size of info string.
- * @return					Number of bytes written, not including the 
- *							null terminator.
- * @error					Invalid TopMenu Handle or TopMenuObject ID.
- */
-native GetTopMenuObjName(Handle:topmenu, TopMenuObject:object, String:buffer[], maxlength);
-
-/**
- * Removes an object from a TopMenu.
- *
- * Plugins' objects are automatically removed all TopMenus when the given 
- * plugin unloads or pauses.  In the case of unpausing, all items are restored.
- *
- * @param topmenu			TopMenu Handle.
- * @param object			TopMenuObject ID.
- * @noreturn
- * @error					Invalid TopMenu Handle.
- */
-native RemoveFromTopMenu(Handle:topmenu, TopMenuObject:object);
-
-/**
- * Displays a TopMenu to a client.
- *
- * @param topmenu			TopMenu Handle.
- * @param client			Client index.
- * @param position			Position to display from.
- * @return					True on success, false on failure.
- * @error					Invalid TopMenu Handle or client not in game.
- */
-native bool:DisplayTopMenu(Handle:topmenu, client, TopMenuPosition:position);
-
-/**
- * Displays a TopMenu category to a client.
- *
- * @param topmenu			TopMenu Handle.
- * @param category		Category object id.
- * @param client			Client index.
- * @return					True on success, false on failure.
- * @error					Invalid TopMenu Handle or client not in game.
- */
-native bool:DisplayTopMenuCategory(Handle:topmenu, TopMenuObject:category, client);
-
-/**
- * Finds a category's object ID in a TopMenu.
- *
- * @param topmenu			TopMenu Handle.
- * @param name				Object's unique name.
- * @return					TopMenuObject ID on success, or 
- *							INVALID_TOPMENUOBJECT on failure.
- * @error					Invalid TopMenu Handle.
- */
-native TopMenuObject:FindTopMenuCategory(Handle:topmenu, const String:name[]);
-
-/**
- * Change the menu title caching behaviour of the TopMenu. By default the titles are cached to reduce overhead.
- * If you need dynamic menu titles, which can change everytime the menu is displayed to a user, set this to false.
- *
- * @param topmenu       TopMenu Handle.
- * @param cache_titles  Cache the menu titles and don't call the handler with TopMenuAction_DisplayTitle everytime the menu is drawn?
- * @noreturn
- * @error               Invalid TopMenu Handle
- */
-native SetTopMenuTitleCaching(Handle:topmenu, bool:cache_titles);
-
-/**
- * Do not edit below this line!
- */
-public Extension:__ext_topmenus = 
-{
-	name = "TopMenus",
-	file = "topmenus.ext",
-#if defined AUTOLOAD_EXTENSIONS
-	autoload = 1,
-#else
-	autoload = 0,
-#endif
-#if defined REQUIRE_EXTENSIONS
-	required = 1,
-#else
-	required = 0,
-#endif
-};
-
-#if !defined REQUIRE_EXTENSIONS
-public __ext_topmenus_SetNTVOptional()
-{
-	MarkNativeAsOptional("CreateTopMenu");
-	MarkNativeAsOptional("LoadTopMenuConfig");
-	MarkNativeAsOptional("AddToTopMenu");
-	MarkNativeAsOptional("RemoveFromTopMenu");
-	MarkNativeAsOptional("DisplayTopMenu");
-	MarkNativeAsOptional("DisplayTopMenuCategory");
-	MarkNativeAsOptional("FindTopMenuCategory");
-	MarkNativeAsOptional("SetTopMenuTitleCaching");
-}
-#endif
-/**
- * vim: set ts=4 :
- * =============================================================================
- * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
- * =============================================================================
- *
- * This file is part of the SourceMod/SourcePawn SDK.
- *
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the GNU General Public License, version 3.0, as published by the
- * Free Software Foundation.
- * 
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * As a special exception, AlliedModders LLC gives you permission to link the
- * code of this program (as well as its derivative works) to "Half-Life 2," the
- * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
- * by the Valve Corporation.  You must obey the GNU General Public License in
- * all respects for all other code used.  Additionally, AlliedModders LLC grants
- * this exception to all derivative works.  AlliedModders LLC defines further
- * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
- * or <http://www.sourcemod.net/license.php>.
- *
- * Version: $Id$
- */
- 
 #if defined _eventsmsgs_included
  #endinput
 #endif
@@ -19217,15 +19356,16 @@ native EndMessage();
  *						blocks the message from being sent, and Plugin_Continue 
  *						resumes normal functionality.
  */
-functag public Action:MsgHook(UserMsg:msg_id, Handle:msg, const players[], playersNum, bool:reliable, bool:init);
+typedef MsgHook = function Action (UserMsg msg_id, Handle msg, const int[] players, int playersNum, bool reliable, bool init);
 
 /**
  * Called when a message hook has completed.
  *
  * @param msg_id		Message index.
  * @param sent			True if message was sent, false if blocked.
+ * @noreturn
  */
-functag public MsgPostHook(UserMsg:msg_id, bool:sent);
+typedef MsgPostHook = function void (UserMsg msg_id, bool sent);
 
 /**
  * Hooks a user message.
@@ -19239,7 +19379,7 @@ functag public MsgPostHook(UserMsg:msg_id, bool:sent);
  * @noreturn
  * @error				Invalid message index.
  */
-native HookUserMessage(UserMsg:msg_id, MsgHook:hook, bool:intercept=false, MsgPostHook:post=MsgPostHook:-1);
+native HookUserMessage(UserMsg:msg_id, MsgHook:hook, bool:intercept=false, MsgPostHook:post=INVALID_FUNCTION);
 
 /**
  * Removes one usermessage hook.
@@ -19293,6 +19433,55 @@ stock Handle:StartMessageOne(String:msgname[], client, flags=0)
 	
 	return StartMessage(msgname, players, 1, flags);
 }
+/**
+ * vim: set ts=4 :
+ * =============================================================================
+ * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+ * =============================================================================
+ *
+ * This file is part of the SourceMod/SourcePawn SDK.
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, version 3.0, as published by the
+ * Free Software Foundation.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * As a special exception, AlliedModders LLC gives you permission to link the
+ * code of this program (as well as its derivative works) to "Half-Life 2," the
+ * "Source Engine," the "SourcePawn JIT," and any Game MODs that run on software
+ * by the Valve Corporation.  You must obey the GNU General Public License in
+ * all respects for all other code used.  Additionally, AlliedModders LLC grants
+ * this exception to all derivative works.  AlliedModders LLC defines further
+ * exceptions, found in LICENSE.txt (as of this writing, version JULY-31-2007),
+ * or <http://www.sourcemod.net/license.php>.
+ *
+ * Version: $Id$
+ */
+ 
+#if defined _version_included
+ #endinput
+#endif
+#define _version_included
+
+#tryinclude <version_auto>
+
+#if !defined _auto_version_included
+#define SOURCEMOD_V_TAG			"manual"
+#define SOURCEMOD_V_REV			0
+#define SOURCEMOD_V_CSET		"0"
+#define SOURCEMOD_V_MAJOR		1				/**< SourceMod Major version */
+#define SOURCEMOD_V_MINOR		7				/**< SourceMod Minor version */
+#define SOURCEMOD_V_RELEASE		0				/**< SourceMod Release version */
+
+#define SOURCEMOD_VERSION	"1.7.0-manual"	/**< SourceMod version string (major.minor.release-tag) */
+#endif
 /**
  * vim: set ts=4 :
  * =============================================================================
@@ -19518,22 +19707,15 @@ stock MakeVectorFromPoints(const Float:pt1[3], const Float:pt2[3], Float:output[
 #endif
 #define _version_included
 
-#tryinclude <version_auto>
+#define SOURCEMOD_V_MAJOR		$PMAJOR$				/**< SourceMod Major version */
+#define SOURCEMOD_V_MINOR		$PMINOR$				/**< SourceMod Minor version */
+#define SOURCEMOD_V_RELEASE		$PREVISION$				/**< SourceMod Release version */
 
-#if !defined _auto_version_included
-#define SOURCEMOD_V_TAG			"manual"
-#define SOURCEMOD_V_REV			0
-#define SOURCEMOD_V_CSET		"0"
-#define SOURCEMOD_V_MAJOR		1				/**< SourceMod Major version */
-#define SOURCEMOD_V_MINOR		6				/**< SourceMod Minor version */
-#define SOURCEMOD_V_RELEASE		0				/**< SourceMod Release version */
-
-#define SOURCEMOD_VERSION	"1.6.0-manual"	/**< SourceMod version string (major.minor.release-tag) */
-#endif
+#define SOURCEMOD_VERSION	"$PMAJOR$.$PMINOR$.$PREVISION$$BUILD_STRING$"	/**< SourceMod version string (major.minor.release.build) */
 /**
- * vim: set ts=4 :
+ * vim: set ts=4 sw=4 tw=99 noet :
  * =============================================================================
- * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+ * SourceMod (C)2004-2014 AlliedModders LLC.  All rights reserved.
  * =============================================================================
  *
  * This file is part of the SourceMod/SourcePawn SDK.
@@ -19561,14 +19743,44 @@ stock MakeVectorFromPoints(const Float:pt1[3], const Float:pt2[3], Float:output[
  *
  * Version: $Id$
  */
- 
-#if defined _version_included
- #endinput
-#endif
-#define _version_included
 
-#define SOURCEMOD_V_MAJOR		$PMAJOR$				/**< SourceMod Major version */
-#define SOURCEMOD_V_MINOR		$PMINOR$				/**< SourceMod Minor version */
-#define SOURCEMOD_V_RELEASE		$PREVISION$				/**< SourceMod Release version */
+static TestNumber = 0;
+static String:TestContext[255];
 
-#define SOURCEMOD_VERSION	"$PMAJOR$.$PMINOR$.$PREVISION$$BUILD_STRING$"	/**< SourceMod version string (major.minor.release.build) */
+SetTestContext(const String:context[])
+{
+	strcopy(TestContext, sizeof(TestContext), context);
+}
+
+AssertEq(const String:text[], cell1, cell2)
+{
+	TestNumber++;
+	if (cell1 == cell2) {
+		PrintToServer("[%d] %s: %s == %d OK", TestNumber, TestContext, text, cell2);
+	} else {
+		PrintToServer("[%d] %s FAIL: %s should be %d, got %d", TestNumber, TestContext, text, cell2, cell1);
+		ThrowError("test %d (%s in %s) failed", TestNumber, text, TestContext);
+	}
+}
+
+AssertFalse(const String:text[], bool:value)
+{
+	TestNumber++;
+	if (!value) {
+		PrintToServer("[%d] %s: %s == false OK", TestNumber, TestContext, text, value);
+	} else {
+		PrintToServer("[%d] %s FAIL: %s should be false, got true", TestNumber, TestContext, text);
+		ThrowError("test %d (%s in %s) failed", TestNumber, text, TestContext);
+	}
+}
+
+AssertTrue(const String:text[], bool:value)
+{
+	TestNumber++;
+	if (value) {
+		PrintToServer("[%d] %s: %s == true OK", TestNumber, TestContext, text, value);
+	} else {
+		PrintToServer("[%d] %s FAIL: %s should be true, got false", TestNumber, TestContext, text);
+		ThrowError("test %d (%s in %s) failed", TestNumber, text, TestContext);
+	}
+}
