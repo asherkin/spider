@@ -1,0 +1,156 @@
+html, body, .container-fluid, #input-col, #input {
+  height: 100%;
+}
+
+.container-fluid {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+#input-col {
+  margin-bottom: 20px;
+}
+
+#gutter {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+  background-color: #ebebeb;
+  display: none;
+}
+
+#input {
+  white-space: pre;
+  /*font-family: Menlo, Monaco, Consolas, "Courier New", monospace;*/
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+  line-height: normal;
+  font-size: 12px;
+  border: 1px solid #DCDCDC;
+  border-radius: 4px;
+}
+
+#footer {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+#footer small {
+  display: inline-block;
+}
+
+@media (min-width: 768px) {
+  #input-col {
+    margin-bottom: 0;
+  }
+
+  .ace_gutter-active-line {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+  }
+
+  #gutter {
+    display: block;
+  }
+
+  #input {
+    border-color: transparent;
+    border-radius: 0;
+  }
+
+  #footer {
+    text-align: right;
+  }
+}
+
+.row {
+  margin-bottom: 20px;
+}
+
+.ace_gutter-cell.ace_warning {
+  background-image: none !important;
+}
+
+.ace_gutter-cell.ace_warning:before {
+  content: '!';
+  position: absolute;
+  left: 0;
+  color: #FFA300;
+  font-size: 14px;
+  line-height: 12px;
+  font-weight: bolder;
+  padding-left: 4px;
+  padding-top: 1px;
+}
+
+.ace_gutter-cell.ace_error {
+  background-image: none !important;
+}
+
+.ace_gutter-cell.ace_error:before {
+  content: '\00d7';
+  position: absolute;
+  left: 0;
+  color: #df3c3e;
+  font-size: 14px;
+  line-height: 12px;
+  font-weight: bolder;
+  padding-left: 4px;
+}
+
+.alert {
+  padding: 10px 15px;
+}
+
+.alert-dismissible {
+  padding-right: 35px;
+}
+
+.alert-dismissible .close {
+  top: 0;
+}
+
+#session-alert a.alert-link {
+  display: inline-block;
+}
+
+#output {
+  height: 210px;
+  margin-bottom: 20px;
+  overflow: auto;
+  word-wrap: normal;
+}
+
+#include-drop {
+  border-bottom-style: dashed;
+  border-left-style: dashed;
+  border-right-style: dashed;
+}
+
+#include-drop:first-child {
+  border-top-style: dashed;
+}
+
+#include-drop.hover {
+  color: #31708F;
+  background-color: #D9EDF7;
+  border-bottom-color: #BCE8F1;
+  border-left-color: #BCE8F1;
+  border-right-color: #BCE8F1;
+}
+
+#include-drop.hover:first-child {
+  border-top-color: #BCE8F1;
+}
+
+small.text-muted a {
+  color: #777;
+  font-weight: bold;
+}
+
+small.text-muted a:focus, small.text-muted a:hover {
+  color: #2A6496;
+  text-decoration: none;
+}
+
