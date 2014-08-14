@@ -68,15 +68,15 @@ html, body, .container-fluid, #input-col, #input {
   margin-bottom: 20px;
 }
 
-.ace_gutter-cell.ace_warning {
-  background-image: none !important;
+.ace_gutter .ace_gutter-cell.ace_warning {
+  background-image: none;
 }
 
 .ace_gutter-cell.ace_warning:before {
   content: '!';
   position: absolute;
   left: 0;
-  color: #FFA300;
+  color: #ffa300;
   font-size: 14px;
   line-height: 12px;
   font-weight: bolder;
@@ -84,8 +84,8 @@ html, body, .container-fluid, #input-col, #input {
   padding-top: 1px;
 }
 
-.ace_gutter-cell.ace_error {
-  background-image: none !important;
+.ace_gutter .ace_gutter-cell.ace_error {
+  background-image: none;
 }
 
 .ace_gutter-cell.ace_error:before {
@@ -97,6 +97,22 @@ html, body, .container-fluid, #input-col, #input {
   line-height: 12px;
   font-weight: bolder;
   padding-left: 4px;
+}
+
+.error_widget_wrapper {
+  border-bottom-left-radius: 6px;
+}
+
+.error_widget_wrapper .error_widget {
+  margin-left: 6px;
+}
+
+.error_widget_wrapper .error_widget.ace_error, .error_widget_wrapper .error_widget_arrow.ace_error {
+  border-color: #df3c3e;
+}
+
+.error_widget_wrapper .error_widget.ace_warning, .error_widget_wrapper .error_widget_arrow.ace_warning {
+  border-color: #ffa300;
 }
 
 .alert {
