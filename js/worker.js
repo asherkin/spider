@@ -4,7 +4,7 @@ var Module = {
   noInitialRun: true,
   print: print,
   postRun: [postRun],
-  arguments: ['-iinclude', '-iextra', 'plugin.sp'],
+  arguments: ['-iextra', '-iinclude', 'plugin.sp'],
   memoryInitializerPrefixURL: 'spcomp/',
   filePackagePrefixURL: 'spcomp/',
 };
