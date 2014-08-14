@@ -36,7 +36,26 @@ updateGutterWidth();
 
 var includes = document.getElementById('includes');
 
-var template = input.getValue();
+var template = [
+  '#pragma semicolon 1',
+  '',
+  '#include <sourcemod>',
+  '',
+  'public Plugin:myinfo = {',
+  '\tname        = "",',
+  '\tauthor      = "",',
+  '\tdescription = "",',
+  '\tversion     = "0.0.0",',
+  '\turl         = ""',
+  '};',
+  '',
+  'public OnPluginStart()',
+  '{',
+  '\tPrintToServer("Hello, World!");',
+  '}',
+  '',
+].join('\n');
+
 var savedText = localStorage['plugin.sp'];
 if (savedText && (savedText !== template || localStorage.length > 1)) {
   var sessionAlert = document.getElementById('session-alert');

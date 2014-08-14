@@ -137,7 +137,7 @@ html, body, .container-fluid, #input-col, #input {
   top: 0;
 }
 
-#session-alert a.alert-link {
+a.alert-link {
   display: inline-block;
 }
 

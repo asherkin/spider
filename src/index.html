@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-manifest="spider.appcache">
+<html lang="en" manifest="spider.appcache">
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -12,28 +12,12 @@
 <div class="container-fluid">
   <div id="input-col" class="col-sm-7">
     <div id="gutter"></div>
-    <div id="input">#pragma semicolon 1
-
-#include &lt;sourcemod&gt;
-
-public Plugin:myinfo = {
-	name        = "",
-	author      = "",
-	description = "",
-	version     = "0.0.0",
-	url         = ""
-};
-
-public OnPluginStart()
-{
-	PrintToServer("Hello, World!");
-}
-</div>
+    <div id="input"></div>
   </div>
   <div class="col-sm-5">
-    <div id="update-alert" class="alert alert-info alert-dismissible hide">
+    <div id="update-alert" class="alert alert-success alert-dismissible hide">
       <button type="button" class="close">&times;</button>
-      Spider has been updated. <a class="alert-link" href=".">Refresh the page.</a>
+      Spider has been updated. <a class="alert-link" href=".">Refresh to load the new version.</a>
     </div>
     <div id="session-alert" class="alert alert-info alert-dismissible hide">
       <button type="button" class="close">&times;</button>
