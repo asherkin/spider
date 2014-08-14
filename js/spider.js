@@ -8,6 +8,8 @@ input.setShowPrintMargin(false);
 input.setHighlightActiveLine(false);
 input.getSession().setUseWrapMode(true);
 input.getSession().setUseSoftTabs(false);
+input.commands.removeCommand('showSettingsMenu');
+input.commands.removeCommand('find');
 
 var gutter = document.getElementById('gutter');
 
