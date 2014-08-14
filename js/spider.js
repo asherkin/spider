@@ -1,5 +1,16 @@
 'use strict';
 
+function showUpdateNotice() {
+  var notice = document.getElementById('update-alert');
+  notice.classList.remove('hide');
+}
+
+applicationCache.addEventListener('updateready', showUpdateNotice);
+
+if(applicationCache.status === applicationCache.UPDATEREADY) {
+  showUpdateNotice();
+}
+
 var input = ace.edit('input');
 input.setTheme('ace/theme/chrome');
 input.getSession().setMode('ace/mode/c_cpp');
