@@ -86,7 +86,20 @@ for (var i = 0; i < localStorage.length; ++i) {
     });
   })(filename, li);
 
-  var display = document.createTextNode(filename.replace(/^extra\//, ''));
+  var display = document.createElement('ol');
+
+  filename = filename.split('/');
+
+  if (filename[0] === 'extra') {
+    filename.shift();
+  }
+
+  for (var j = 0; j < filename.length; ++j) {
+    var olli = document.createElement('li');
+    olli.textContent = filename[j];
+
+    display.appendChild(olli);
+  }
 
   li.appendChild(close); 
   li.appendChild(display);
@@ -158,7 +171,10 @@ includeDrop.addEventListener('drop', function(event) {
         includes.removeChild(li);
       };
 
-      var display = document.createTextNode(file.name);
+      var display = document.createElement('ol');
+      var olli = document.createElement('li');
+      olli.textContent = file.name;
+      display.appendChild(olli);
 
       li.appendChild(close);
       li.appendChild(display);

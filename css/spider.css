@@ -122,6 +122,22 @@ html, body, .container-fluid, #input-col, #input {
   word-wrap: normal;
 }
 
+#includes .list-group-item ol {
+  list-style: none;
+  padding: 0;
+}
+
+#includes .list-group-item ol li {
+  display: inline-block;
+}
+
+#includes .list-group-item ol li + li::before {
+  content: '/';
+  color: #777;
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
 #include-drop {
   border-bottom-style: dashed;
   border-left-style: dashed;
