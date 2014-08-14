@@ -8,8 +8,7 @@
     "buttons.less",
     "alerts.less",
     "list-group.less",
-    "close.less",
-    "component-animations.less"
+    "close.less"
   ],
   "js": []
 }
