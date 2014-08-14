@@ -32,15 +32,13 @@ if (savedText && (savedText !== template || localStorage.length > 1)) {
 
   var closebtn = sessionAlert.getElementsByClassName('close')[0];
   closebtn.onclick = function() {
-    sessionAlert.classList.remove('in');
-    setTimeout(function() {
-      sessionAlert.classList.add('hide');
-    }, 300);
+    sessionAlert.classList.add('hide');
   };
 
   var loadTemplate = sessionAlert.getElementsByClassName('alert-link')[0];
   loadTemplate.onclick = function() {
-    closebtn.onclick();
+    sessionAlert.classList.add('hide');
+
     input.setValue(template, -1);
 
     localStorage.clear();
@@ -49,11 +47,14 @@ if (savedText && (savedText !== template || localStorage.length > 1)) {
       includes.removeChild(includes.firstChild);
     }
 
+    compiled = undefined;
+    downloadbtn.disabled = true;
+    output.textContent = '';
+
     return false;
   };
 
   sessionAlert.classList.remove('hide');
-  sessionAlert.classList.add('in');
 
   input.setValue(savedText, -1);
 } else {
