@@ -105,7 +105,6 @@ window.addEventListener('dragenter', killDropEvent);
 window.addEventListener('dragover', killDropEvent);
 window.addEventListener('drop', killDropEvent);
 
-
 includeDrop.addEventListener('dragenter', function(event) {
   includeDrop.classList.add('hover');
   event.dataTransfer.dropEffect = 'copy';
@@ -169,6 +168,42 @@ includeDrop.addEventListener('drop', function(event) {
 
     reader.readAsText(file);
   }
+
+  event.stopPropagation();
+  event.preventDefault();
+});
+
+input.container.addEventListener('dragenter', function(event) {
+  event.dataTransfer.dropEffect = 'copy';
+
+  event.stopPropagation();
+  event.preventDefault();
+});
+
+input.container.addEventListener('dragover', function(event) {
+  event.dataTransfer.dropEffect = 'copy';
+
+  event.stopPropagation();
+  event.preventDefault();
+});
+
+input.container.addEventListener('drop', function(event) {
+  if (event.dataTransfer.files.length != 1) {
+    return;
+  }
+
+  var file = event.dataTransfer.files[0];
+
+  if (!file.type.match(/^text\//) && !file.name.match(/(sp|inc)$/)) {
+    return;
+  }
+
+  var reader = new FileReader();
+  reader.onload = function(event) {
+    input.setValue(event.target.result, -1);
+  }
+
+  reader.readAsText(file);
 
   event.stopPropagation();
   event.preventDefault();
