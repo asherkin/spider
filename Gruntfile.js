@@ -7,8 +7,11 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['js/**/*.js', '!js/spcomp/*', '!js/amxxpc/*'],
+          src: ['js/**/*.js', '!js/translations/**/*', '!js/spcomp/**/*', '!js/amxxpc/**/*'],
           dest: 'build/',
+        }, {
+          src: ['src/js/translations/en.js', 'src/js/translations/**/*'],
+          dest: 'build/js/translations.js',
         }],
       },
     },
@@ -28,6 +31,7 @@ module.exports = function(grunt) {
       options: {
         removeComments: true,
         collapseWhitespace: true,
+        collapseBooleanAttributes: true,
       },
       build: {
         files: [{
@@ -44,7 +48,7 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['favicon.ico', 'robots.txt', 'js/spcomp/*', 'js/amxxpc/*'],
+          src: ['favicon.ico', 'robots.txt', 'js/spcomp/**/*', 'js/amxxpc/**/*'],
           dest: 'build/',
         }],
       },

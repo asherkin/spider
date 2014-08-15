@@ -44,6 +44,10 @@ html, body, .container-fluid, #input-col, #input {
   display: inline-block;
 }
 
+#lang-reset {
+  margin-right: 1em;
+} 
+
 @media (min-width: 768px) {
   #input-col {
     margin-bottom: 0;
@@ -74,6 +78,11 @@ html, body, .container-fluid, #input-col, #input {
 
   #footer {
     text-align: right;
+  }
+
+  #lang-reset {
+    float: left;
+    margin-top: 3px;
   }
 }
 

@@ -1,5 +1,50 @@
 'use strict';
 
+var currentLanguage = 'en';
+var languageReset = document.getElementById('lang-reset');
+
+languageReset.onclick = function() {
+  setLanguage('en');
+  return false;
+};
+
+function setLanguage(lang) {
+  if (lang === currentLanguage) {
+    return;
+  }
+
+  var current = translations[currentLanguage];
+  var strings = translations[lang];
+
+  if (!strings || strings.length != current.length) {
+    console.log('Language ' + lang + ' not found or invalid.');
+    return;
+  }
+
+  var translatables = document.getElementsByClassName('trans');
+
+  for (var i = 0; i < translatables.length; ++i) {
+    var index = current.indexOf(translatables[i].innerText);
+
+    if (index === -1) {
+      console.log('Phrase "' + translatables[i].innerText + '" not found.');
+      continue;
+    }
+
+    translatables[i].innerText = translations[lang][index];
+  };
+
+  if (lang !== 'en') {
+    languageReset.classList.remove('hide');
+  } else {
+    languageReset.classList.add('hide');
+  }
+
+  currentLanguage = lang;
+}
+
+setLanguage(navigator.language.substr(0, 2));
+
 function showUpdateNotice() {
   var notice = document.getElementById('update-alert');
   notice.classList.remove('hide');
@@ -18,7 +63,7 @@ if(applicationCache.status === applicationCache.UPDATEREADY) {
 }
 
 setInterval(function() {
-  if(navigator.onLine && applicationCache.status === applicationCache.IDLE) {
+  if(navigator.onLine && (applicationCache.status === applicationCache.IDLE || applicationCache.status === applicationCache.UPDATEREADY)) {
     applicationCache.update();
   }
 }, 3600000);
