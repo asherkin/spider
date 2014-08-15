@@ -3,6 +3,12 @@
 function showUpdateNotice() {
   var notice = document.getElementById('update-alert');
   notice.classList.remove('hide');
+
+  var reload = notice.getElementsByClassName('alert-link')[0];
+  reload.onclick = function() {
+    location.reload();
+    return false;
+  };
 }
 
 applicationCache.addEventListener('updateready', showUpdateNotice);
@@ -12,8 +18,8 @@ if(applicationCache.status === applicationCache.UPDATEREADY) {
 }
 
 setInterval(function() {
-  if(navigator.onLine && window.applicationCache.status === window.applicationCache.IDLE) {
-    window.applicationCache.update();
+  if(navigator.onLine && applicationCache.status === applicationCache.IDLE) {
+    applicationCache.update();
   }
 }, 3600000);
 
@@ -42,7 +48,9 @@ updateGutterWidth();
 
 var includes = document.getElementById('includes');
 
-var template = [
+var compiler = (location.hash === '#amxxpc' ? 'amxxpc' : 'spcomp');
+
+var template_spcomp = [
   '#pragma semicolon 1',
   '',
   '#include <sourcemod>',
@@ -62,7 +70,27 @@ var template = [
   '',
 ].join('\n');
 
-var savedText = localStorage['plugin.sp'];
+var template_amxxpc = [
+  '#pragma semicolon 1',
+  '',
+  '#include <amxmodx>',
+  '',
+  'new PLUGIN[]  = "";',
+  'new AUTHOR[]  = "";',
+  'new VERSION[] = "0.00";',
+  '',
+  'public plugin_init()',
+  '{',
+  '\tregister_plugin(PLUGIN, VERSION, AUTHOR);',
+  '\t',
+  '\tserver_print("Hello, World!");',
+  '}',
+  '',
+].join('\n');
+
+var template = (compiler === 'amxxpc' ? template_amxxpc : template_spcomp);
+
+var savedText = localStorage['plugin.' + (compiler === 'amxxpc' ? 'sma' : 'sp')];
 if (savedText && (savedText !== template || localStorage.length > 1)) {
   var sessionAlert = document.getElementById('session-alert');
 
@@ -99,7 +127,7 @@ if (savedText && (savedText !== template || localStorage.length > 1)) {
 }
 
 input.on('input', function() {
-  localStorage['plugin.sp'] = input.getValue();
+  localStorage['plugin.' + (compiler === 'amxxpc' ? 'sma' : 'sp')] = input.getValue();
 });
 
 var includeDrop = document.getElementById('include-drop');
@@ -107,7 +135,7 @@ var includeDrop = document.getElementById('include-drop');
 for (var i = 0; i < localStorage.length; ++i) {
   var filename = localStorage.key(i);
 
-  if (filename === 'plugin.sp') {
+  if (filename.match(/\.(sma|sp)$/)) {
     continue;
   }
 
@@ -185,41 +213,43 @@ includeDrop.addEventListener('drop', function(event) {
   for (var i = 0; i < event.dataTransfer.files.length; ++i) {
     var file = event.dataTransfer.files[i];
 
-    if (!file.type.match(/^text\//) && !file.name.match(/(sp|inc)$/)) {
+    if (!file.type.match(/^text\//) && !file.name.match(/(sma|sp|inc)$/)) {
       continue;
     }
 
     var reader = new FileReader();
-    reader.onload = function(event) {
-      var exists = (localStorage['extra/' + file.name] !== undefined);
-      localStorage['extra/' + file.name] = event.target.result;
+    reader.onload = (function(filename) {
+      return function(event) {
+        var exists = (localStorage['extra/' + filename] !== undefined);
+        localStorage['extra/' + filename] = event.target.result;
 
-      if (exists) {
-        return;
-      }
+        if (exists) {
+          return;
+        }
 
-      var li = document.createElement('li');
-      li.classList.add('list-group-item');
+        var li = document.createElement('li');
+        li.classList.add('list-group-item');
 
-      var close = document.createElement('button');
-      close.type = 'button';
-      close.classList.add('close');
-      close.textContent = '\u00D7';
-      close.onclick = function() {
-        delete localStorage['extra/' + file.name];
-        includes.removeChild(li);
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.classList.add('close');
+        close.textContent = '\u00D7';
+        close.onclick = function() {
+          delete localStorage['extra/' + filename];
+          includes.removeChild(li);
+        };
+
+        var display = document.createElement('ol');
+        var olli = document.createElement('li');
+        olli.textContent = filename;
+        display.appendChild(olli);
+
+        li.appendChild(close);
+        li.appendChild(display);
+
+        includes.insertBefore(li, includeDrop);
       };
-
-      var display = document.createElement('ol');
-      var olli = document.createElement('li');
-      olli.textContent = file.name;
-      display.appendChild(olli);
-
-      li.appendChild(close);
-      li.appendChild(display);
-
-      includes.insertBefore(li, includeDrop);
-    };
+    })(file.name);
 
     reader.readAsText(file);
   }
@@ -249,7 +279,7 @@ input.container.addEventListener('drop', function(event) {
 
   var file = event.dataTransfer.files[0];
 
-  if (!file.type.match(/^text\//) && !file.name.match(/(sp|inc)$/)) {
+  if (!file.type.match(/^text\//) && !file.name.match(/(sma|sp|inc)$/)) {
     return;
   }
 
@@ -269,13 +299,15 @@ var output = document.getElementById('output');
 var compilebtn = document.getElementById('compile');
 var downloadbtn = document.getElementById('download');
 
-var worker = new Worker('js/worker.js');
 var compiled;
+var worker = new Worker('js/worker.js');
+worker.postMessage(compiler);
 
 function compile() {
   if (worker.onmessage) {
     worker.terminate();
     worker = new Worker('js/worker.js');
+    worker.postMessage(compiler);
   }
 
   worker.onmessage = handle;
@@ -306,7 +338,7 @@ function handle(event) {
   if (typeof event.data === 'string') {
     output.textContent += event.data + '\r\n';
 
-    var message = event.data.match(/^plugin\.sp\((\d+)\) : (?:fatal )?(\w+) \d+: (.+)/);
+    var message = event.data.match(/^plugin\.(?:sma|sp)\((\d+)\) : (?:fatal )?(\w+) \d+: (.+)/);
     if (!message) {
       return;
     }
@@ -332,6 +364,7 @@ function handle(event) {
 
   worker.terminate();
   worker = new Worker('js/worker.js');
+  worker.postMessage(compiler);
 }
 
 compilebtn.onclick = function() {
@@ -351,6 +384,6 @@ downloadbtn.onclick = function() {
 
   var blob = new Blob([compiled], {type: 'application/octet-stream'});
 
-  saveAs(blob, 'plugin.smx');
+  saveAs(blob, 'plugin.' + (compiler === 'amxxpc' ? 'amxx' : 'smx'));
 };
 

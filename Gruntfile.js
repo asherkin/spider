@@ -7,7 +7,7 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['js/**/*.js', '!js/spcomp/*'],
+          src: ['js/**/*.js', '!js/spcomp/*', '!js/amxxpc/*'],
           dest: 'build/',
         }],
       },
@@ -44,7 +44,7 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['js/spcomp/*'],
+          src: ['favicon.ico', 'robots.txt', 'js/spcomp/*', 'js/amxxpc/*'],
           dest: 'build/',
         }],
       },

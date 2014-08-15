@@ -4,9 +4,7 @@ var Module = {
   noInitialRun: true,
   print: print,
   postRun: [postRun],
-  arguments: ['-iextra', '-iinclude', 'plugin.sp'],
-  memoryInitializerPrefixURL: 'spcomp/',
-  filePackagePrefixURL: 'spcomp/',
+  arguments: ['-iextra', '-iinclude'],
 };
 
 // Workaround for Safari.
@@ -14,9 +12,19 @@ if (!self.console) {
   self.console = {log: function() {}};
 }
 
-importScripts('spcomp/spcomp.js');
-
 onmessage = function(event) {
+  if (typeof event.data === 'string') {
+    Module['compiler'] = event.data;
+    Module['arguments'].push('plugin.' + (event.data === 'amxxpc' ? 'sma' : 'sp'));
+
+    Module['memoryInitializerPrefixURL'] = event.data + '/';
+    Module['filePackagePrefixURL'] = event.data + '/';
+
+    importScripts(event.data + '/' + event.data + '.js');
+
+    return;
+  }
+
   for (var i = 0; i < event.data.length; ++i) {
 /*
     var view = new Uint16Array(event.data[i].content);
@@ -49,11 +57,10 @@ function print(message) {
 }
 
 function postRun() {
-  var compiled = FS.root.contents['plugin.smx'];
-
-  if (compiled) {
-    postMessage(compiled.contents.buffer/*, [compiled.contents.buffer]*/);
-  } else {
+  try {
+    var compiled = FS.readFile('/plugin.' + (Module['compiler'] === 'amxxpc' ? 'amxx' : 'smx'));
+    postMessage(compiled.buffer/*, [compiled.buffer]*/);
+  } catch (e) {
     postMessage(false);
   }
 
