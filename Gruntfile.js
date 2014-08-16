@@ -2,6 +2,12 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
+    clean: {
+      build: {
+        src: ['build/'],
+      },
+    },
+
     uglify: {
       build: {
         files: [{
@@ -65,11 +71,12 @@ module.exports = function(grunt) {
     },
   });
 
+  grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-htmlmin');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-appcache');
 
-  grunt.registerTask('default', ['uglify', 'cssmin', 'htmlmin', 'copy', 'appcache']);
+  grunt.registerTask('default', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy', 'appcache']);
 }
