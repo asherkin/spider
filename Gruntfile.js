@@ -62,11 +62,28 @@ module.exports = function(grunt) {
 
     appcache: {
       options: {
-        basePath: 'build',
+        basePath: 'build/',
       },
       build: {
         dest: 'build/spider.appcache',
         cache: 'build/**/*',
+      },
+    },
+
+    connect: {
+      build: {
+        options: {
+          port: 0,
+          base: 'build/',
+          open: true,
+        }
+      },
+    },
+
+    watch: {
+      build: {
+        files: 'src/**/*',
+        tasks: 'default',
       },
     },
   });
@@ -77,6 +94,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-htmlmin');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-appcache');
+  grunt.loadNpmTasks('grunt-contrib-connect')
+  grunt.loadNpmTasks('grunt-contrib-watch');
 
-  grunt.registerTask('default', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy', 'appcache']);
+  grunt.registerTask('default', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy']);
+  grunt.registerTask('dist', ['default', 'appcache']);
+  grunt.registerTask('serve', ['default', 'connect', 'watch']);
 }
