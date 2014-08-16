@@ -56,7 +56,7 @@ function showUpdateNotice() {
   };
 }
 
-applicationCache.addEventListener('updateready', showUpdateNotice);
+applicationCache.onupdateready = showUpdateNotice;
 
 if(applicationCache.status === applicationCache.UPDATEREADY) {
   showUpdateNotice();
@@ -97,11 +97,18 @@ function updateGutterWidth() {
 input.renderer.$gutterLayer.on('changeGutterWidth', updateGutterWidth);
 updateGutterWidth();
 
+var output = document.getElementById('output');
+
+var spcompButton = document.getElementById('compiler-spcomp');
+var amxxpcButton = document.getElementById('compiler-amxxpc');
+
+var compileButton = document.getElementById('compile');
+var downloadButton = document.getElementById('download');
+
 var includes = document.getElementById('includes');
+var includeDrop = document.getElementById('include-drop');
 
-var compiler = (location.hash === '#amxxpc' ? 'amxxpc' : 'spcomp');
-
-var template_spcomp = [
+var spcompTemplate = [
   '#pragma semicolon 1',
   '',
   '#include <sourcemod>',
@@ -121,7 +128,7 @@ var template_spcomp = [
   '',
 ].join('\n');
 
-var template_amxxpc = [
+var amxxpcTemplate = [
   '#pragma semicolon 1',
   '',
   '#include <amxmodx>',
@@ -139,14 +146,144 @@ var template_amxxpc = [
   '',
 ].join('\n');
 
-var template = (compiler === 'amxxpc' ? template_amxxpc : template_spcomp);
+var compiler, template, inputFile, outputFile;
+var worker, compiled;
 
-var savedText = localStorage['plugin.' + (compiler === 'amxxpc' ? 'sma' : 'sp')];
-if (savedText && (savedText !== template || localStorage.length > 1)) {
+function spcompSetup() {
+  if (compiler === 'spcomp') {
+    return;
+  }
+
+  if (template && input.getValue() === template) {
+    input.setValue(spcompTemplate, -1);
+  }
+
+  localStorage['compiler'] = compiler = 'spcomp';
+  template = spcompTemplate;
+  inputFile = 'plugin.sp';
+  outputFile = 'plugin.smx';
+
+  if (worker) {
+    worker.terminate();
+  }
+
+  worker = new Worker('js/worker.js');
+  worker.postMessage(compiler);
+
+  compiled = undefined;
+  downloadButton.disabled = true;
+  output.textContent = '';
+
+  amxxpcButton.classList.remove('active');
+  spcompButton.classList.add('active');
+}
+
+function amxxpcSetup() {
+  if (compiler === 'amxxpc') {
+    return;
+  }
+
+  if (template && input.getValue() === template) {
+    input.setValue(amxxpcTemplate, -1);
+  }
+
+  localStorage['compiler'] = compiler = 'amxxpc';
+  template = amxxpcTemplate;
+  inputFile = 'plugin.sma';
+  outputFile = 'plugin.amxx';
+
+  if (worker) {
+    worker.terminate();
+  }
+
+  worker = new Worker('js/worker.js');
+  worker.postMessage(compiler);
+
+  compiled = undefined;
+  downloadButton.disabled = true;
+  output.textContent = '';
+
+  spcompButton.classList.remove('active');
+  amxxpcButton.classList.add('active');
+}
+
+spcompButton.onclick = spcompSetup;
+amxxpcButton.onclick = amxxpcSetup;
+
+if (localStorage['compiler'] === 'amxxpc') {
+  amxxpcSetup();
+} else {
+  spcompSetup();
+}
+
+var savedText = localStorage['input-file'];
+var savedIncludes = [];
+
+for (var i = 0; i < localStorage.length; ++i) {
+  var key = localStorage.key(i);
+  if (key.match(/^\//)) {
+    savedIncludes.push(key);
+  }
+}
+
+var showRestoreNotice = false;
+
+if (savedText && savedText !== template) {
+  input.setValue(savedText, -1);
+
+  showRestoreNotice = true;
+} else {
+  input.setValue(template, -1);
+}
+
+if (savedIncludes.length > 0) {
+  for (var i = 0; i < savedIncludes.length; ++i) {
+    var filename = savedIncludes[i];
+
+    var li = document.createElement('li');
+    li.classList.add('list-group-item');
+
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.classList.add('close');
+    close.textContent = '\u00D7';
+    close.onclick = (function(filename, li) {
+      return (function() {
+        delete localStorage[filename];
+        includes.removeChild(li);
+      });
+    })(filename, li);
+
+    var display = document.createElement('ol');
+
+    filename = filename.split('/');
+    filename.shift();
+
+    if (filename[0] === 'extra') {
+      filename.shift();
+    }
+
+    for (var j = 0; j < filename.length; ++j) {
+      var olli = document.createElement('li');
+      olli.textContent = filename[j];
+
+      display.appendChild(olli);
+    }
+
+    li.appendChild(close);
+    li.appendChild(display);
+
+    includes.insertBefore(li, includeDrop);
+  }
+
+  showRestoreNotice = true;
+}
+
+if (showRestoreNotice) {
   var sessionAlert = document.getElementById('session-alert');
 
-  var closebtn = sessionAlert.getElementsByClassName('close')[0];
-  closebtn.onclick = function() {
+  var closeButton = sessionAlert.getElementsByClassName('close')[0];
+  closeButton.onclick = function() {
     sessionAlert.classList.add('hide');
   };
 
@@ -156,74 +293,31 @@ if (savedText && (savedText !== template || localStorage.length > 1)) {
 
     input.setValue(template, -1);
 
-    localStorage.clear();
+    for (var i = localStorage.length - 1; i >= 0; --i) {
+      var key = localStorage.key(i);
+
+      if (key.match(/^\//)) {
+        delete localStorage[key];
+      }
+    }
 
     while (includes.childElementCount > 1) {
       includes.removeChild(includes.firstChild);
     }
 
     compiled = undefined;
-    downloadbtn.disabled = true;
+    downloadButton.disabled = true;
     output.textContent = '';
 
     return false;
   };
 
   sessionAlert.classList.remove('hide');
-
-  input.setValue(savedText, -1);
-} else {
-  input.setValue(template, -1);
-  localStorage.clear();
 }
 
 input.on('input', function() {
-  localStorage['plugin.' + (compiler === 'amxxpc' ? 'sma' : 'sp')] = input.getValue();
+  localStorage['input-file'] = input.getValue();
 });
-
-var includeDrop = document.getElementById('include-drop');
-
-for (var i = 0; i < localStorage.length; ++i) {
-  var filename = localStorage.key(i);
-
-  if (filename.match(/\.(sma|sp)$/)) {
-    continue;
-  }
-
-  var li = document.createElement('li');
-  li.classList.add('list-group-item');
-
-  var close = document.createElement('button');
-  close.type = 'button';
-  close.classList.add('close');
-  close.textContent = '\u00D7';
-  close.onclick = (function(filename, li) {
-    return (function() {
-      delete localStorage[filename];
-      includes.removeChild(li);
-    });
-  })(filename, li);
-
-  var display = document.createElement('ol');
-
-  filename = filename.split('/');
-
-  if (filename[0] === 'extra') {
-    filename.shift();
-  }
-
-  for (var j = 0; j < filename.length; ++j) {
-    var olli = document.createElement('li');
-    olli.textContent = filename[j];
-
-    display.appendChild(olli);
-  }
-
-  li.appendChild(close);
-  li.appendChild(display);
-
-  includes.insertBefore(li, includeDrop);
-}
 
 function killDropEvent(event) {
   event.dataTransfer.dropEffect = 'none';
@@ -232,47 +326,47 @@ function killDropEvent(event) {
   event.preventDefault();
 }
 
-window.addEventListener('dragenter', killDropEvent);
-window.addEventListener('dragover', killDropEvent);
-window.addEventListener('drop', killDropEvent);
+window.ondragenter = killDropEvent;
+window.ondragover = killDropEvent;
+window.ondrop = killDropEvent;
 
-includeDrop.addEventListener('dragenter', function(event) {
+includeDrop.ondragenter = function(event) {
   includeDrop.classList.add('hover');
   event.dataTransfer.dropEffect = 'copy';
 
   event.stopPropagation();
   event.preventDefault();
-});
+};
 
-includeDrop.addEventListener('dragover', function(event) {
+includeDrop.ondragover = function(event) {
   event.dataTransfer.dropEffect = 'copy';
 
   event.stopPropagation();
   event.preventDefault();
-});
+};
 
-includeDrop.addEventListener('dragleave', function(event) {
+includeDrop.ondragleave = function(event) {
   includeDrop.classList.remove('hover');
 
   event.stopPropagation();
   event.preventDefault();
-});
+};
 
-includeDrop.addEventListener('drop', function(event) {
+includeDrop.ondrop = function(event) {
   includeDrop.classList.remove('hover');
 
   for (var i = 0; i < event.dataTransfer.files.length; ++i) {
     var file = event.dataTransfer.files[i];
 
-    if (!file.type.match(/^text\//) && !file.name.match(/(sma|sp|inc)$/)) {
+    if (!file.type.match(/^text\//) && !file.name.match(/\.(sma|sp|inc)$/)) {
       continue;
     }
 
     var reader = new FileReader();
     reader.onload = (function(filename) {
       return function(event) {
-        var exists = (localStorage['extra/' + filename] !== undefined);
-        localStorage['extra/' + filename] = event.target.result;
+        var exists = (localStorage['/extra/' + filename] !== undefined);
+        localStorage['/extra/' + filename] = event.target.result;
 
         if (exists) {
           return;
@@ -286,7 +380,7 @@ includeDrop.addEventListener('drop', function(event) {
         close.classList.add('close');
         close.textContent = '\u00D7';
         close.onclick = function() {
-          delete localStorage['extra/' + filename];
+          delete localStorage['/extra/' + filename];
           includes.removeChild(li);
         };
 
@@ -307,31 +401,37 @@ includeDrop.addEventListener('drop', function(event) {
 
   event.stopPropagation();
   event.preventDefault();
-});
+};
 
-input.container.addEventListener('dragenter', function(event) {
+input.container.ondragenter = function(event) {
   event.dataTransfer.dropEffect = 'copy';
 
   event.stopPropagation();
   event.preventDefault();
-});
+};
 
-input.container.addEventListener('dragover', function(event) {
+input.container.ondragover = function(event) {
   event.dataTransfer.dropEffect = 'copy';
 
   event.stopPropagation();
   event.preventDefault();
-});
+};
 
-input.container.addEventListener('drop', function(event) {
+input.container.ondrop = function(event) {
   if (event.dataTransfer.files.length != 1) {
     return;
   }
 
   var file = event.dataTransfer.files[0];
 
-  if (!file.type.match(/^text\//) && !file.name.match(/(sma|sp|inc)$/)) {
+  if (!file.type.match(/^text\//) && !file.name.match(/\.(sma|sp|inc)$/)) {
     return;
+  }
+
+  if (file.name.match(/\.sp$/)) {
+    spcompSetup();
+  } else if (file.name.match(/\.sma$/)) {
+    amxxpcSetup();
   }
 
   var reader = new FileReader();
@@ -343,16 +443,7 @@ input.container.addEventListener('drop', function(event) {
 
   event.stopPropagation();
   event.preventDefault();
-});
-
-var output = document.getElementById('output');
-
-var compilebtn = document.getElementById('compile');
-var downloadbtn = document.getElementById('download');
-
-var compiled;
-var worker = new Worker('js/worker.js');
-worker.postMessage(compiler);
+};
 
 function compile() {
   if (worker.onmessage) {
@@ -368,7 +459,16 @@ function compile() {
 
   for (var i = 0; i < localStorage.length; ++i) {
     var filename = localStorage.key(i);
+
+    if (filename !== 'input-file' && !filename.match(/^\//)) {
+      continue;
+    }
+
     var content = localStorage[filename];
+
+    if (filename === 'input-file') {
+      filename = inputFile;
+    };
 
 /*
     var buffer = new ArrayBuffer(content.length * 2);
@@ -410,7 +510,7 @@ function handle(event) {
 
   if (event.data !== false) {
     compiled = event.data;
-    downloadbtn.disabled = false;
+    downloadButton.disabled = false;
   }
 
   worker.terminate();
@@ -418,22 +518,22 @@ function handle(event) {
   worker.postMessage(compiler);
 }
 
-compilebtn.onclick = function() {
+compileButton.onclick = function() {
   compiled = undefined;
-  downloadbtn.disabled = true;
+  downloadButton.disabled = true;
 
   output.textContent = '';
   input.getSession().clearAnnotations();
   compile();
 };
 
-downloadbtn.onclick = function() {
+downloadButton.onclick = function() {
   if (!compiled) {
-    downloadbtn.disabled = true;
+    downloadButton.disabled = true;
     return;
   }
 
   var blob = new Blob([compiled], {type: 'application/octet-stream'});
 
-  saveAs(blob, 'plugin.' + (compiler === 'amxxpc' ? 'amxx' : 'smx'));
+  saveAs(blob, outputFile);
 };

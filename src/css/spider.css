@@ -46,7 +46,7 @@ html, body, .container-fluid, #input-col, #input {
 
 #lang-reset {
   margin-right: 1em;
-} 
+}
 
 @media (min-width: 768px) {
   #input-col {
@@ -86,7 +86,7 @@ html, body, .container-fluid, #input-col, #input {
   }
 }
 
-.row {
+.row, .btn-group-justified {
   margin-bottom: 20px;
 }
 
@@ -204,4 +204,3 @@ small.text-muted a:focus, small.text-muted a:hover {
   color: #2A6496;
   text-decoration: none;
 }
-
