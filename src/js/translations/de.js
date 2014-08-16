@@ -9,4 +9,3 @@ translations['de'] = [
   "Erstellt von",
   "Angetrieben von", "und",
 ];
-

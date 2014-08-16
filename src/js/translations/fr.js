@@ -9,4 +9,3 @@ translations['fr'] = [
   "Créé par",
   "Propulsé par", "et",
 ];
-

@@ -11,4 +11,3 @@ translations['en'] = [
   "Created by",
   "Powered by", "and",
 ];
-

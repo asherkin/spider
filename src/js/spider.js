@@ -219,7 +219,7 @@ for (var i = 0; i < localStorage.length; ++i) {
     display.appendChild(olli);
   }
 
-  li.appendChild(close); 
+  li.appendChild(close);
   li.appendChild(display);
 
   includes.insertBefore(li, includeDrop);
@@ -437,4 +437,3 @@ downloadbtn.onclick = function() {
 
   saveAs(blob, 'plugin.' + (compiler === 'amxxpc' ? 'amxx' : 'smx'));
 };
-

@@ -1,49 +1,55 @@
 <!DOCTYPE html>
 <html lang="en" manifest="spider.appcache">
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Spider - SourcePawn Compiler</title>
-  <link rel="stylesheet" href="css/bootstrap.css">
-  <link rel="stylesheet" href="css/spider.css">
-</head>
-<body>
-<div class="container-fluid">
-  <div id="input-col" class="col-sm-7">
-    <div id="gutter"></div>
-    <div id="input"></div>
-  </div>
-  <div class="col-sm-5">
-    <div id="update-alert" class="alert alert-success alert-dismissible hide">
-      <button type="button" class="close">&times;</button>
-      <span class="trans">Spider has been updated.</span> <a class="trans alert-link" href=".">Refresh to load the new version.</a>
-    </div>
-    <div id="session-alert" class="alert alert-info alert-dismissible hide">
-      <button type="button" class="close">&times;</button>
-      <span class="trans">Your last session has been restored.</span> <a class="trans alert-link" href="#">Want a clean slate instead?</a>
-    </div>
-    <pre id="output"></pre>
-    <div class="row">
-      <div class="col-xs-6">
-        <button type="button" id="compile" class="trans btn btn-primary btn-block btn-lg">Compile</button>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Spider - SourcePawn Compiler</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/spider.css">
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div id="input-col" class="col-sm-7">
+        <div id="gutter"></div>
+        <div id="input"></div>
       </div>
-      <div class="col-xs-6">
-        <button type="button" id="download" class="trans btn btn-default btn-block btn-lg" disabled>Download</button>
+      <div class="col-sm-5">
+        <div id="update-alert" class="alert alert-success alert-dismissible hide">
+          <button type="button" class="close">&times;</button>
+          <span class="trans">Spider has been updated.</span>
+          <a class="trans alert-link" href=".">Refresh to load the new version.</a>
+        </div>
+        <div id="session-alert" class="alert alert-info alert-dismissible hide">
+          <button type="button" class="close">&times;</button>
+          <span class="trans">Your last session has been restored.</span>
+          <a class="trans alert-link" href="#">Want a clean slate instead?</a>
+        </div>
+        <pre id="output"></pre>
+        <div class="row">
+          <div class="col-xs-6">
+            <button type="button" id="compile" class="trans btn btn-primary btn-block btn-lg">Compile</button>
+          </div>
+          <div class="col-xs-6">
+            <button type="button" id="download" class="trans btn btn-default btn-block btn-lg" disabled>Download</button>
+          </div>
+        </div>
+        <ul id="includes" class="list-group">
+          <li id="include-drop" class="list-group-item text-muted text-center">
+            <span class="trans">Drop</span> <strong>.inc</strong> <span class="trans">files here</span>
+          </li>
+        </ul>
+        <div id="footer">
+            <small id="lang-reset" class="text-muted hide"><a href="#">Wrong language?</a></small>
+            <small class="text-muted"><span class="trans">Created by</span> <a href="http://limetech.org/">Asher Baker</a>.</small>
+            <small class="text-muted"><span class="trans">Powered by</span> <a href="http://emscripten.org/">Emscripten</a> <span class="trans">and</span> <a href="http://ace.c9.io/">Ace</a>.</small>
+        </div>
       </div>
     </div>
-    <ul id="includes" class="list-group">
-      <li id="include-drop" class="list-group-item text-muted text-center"><span class="trans">Drop</span> <strong>.inc</strong> <span class="trans">files here</span></li>
-    </ul>
-    <div id="footer">
-        <small id="lang-reset" class="text-muted hide"><a href="#">Wrong language?</a></small> <small class="text-muted"><span class="trans">Created by</span> <a href="http://limetech.org/">Asher Baker</a>.</small> <small class="text-muted"><span class="trans">Powered by</span> <a href="http://emscripten.org/">Emscripten</a> <span class="trans">and</span> <a href="http://ace.c9.io/">Ace</a>.</small>
-    </div>
-  </div>
-</div>
-<script defer src="js/ace/ace.js"></script>
-<script defer src="js/ace/ext-language_tools.js"></script>
-<script defer src="js/FileSaver.js"></script>
-<script defer src="js/translations.js"></script>
-<script defer src="js/spider.js"></script>
-</body>
+    <script defer src="js/ace/ace.js"></script>
+    <script defer src="js/ace/ext-language_tools.js"></script>
+    <script defer src="js/FileSaver.js"></script>
+    <script defer src="js/translations.js"></script>
+    <script defer src="js/spider.js"></script>
+  </body>
 </html>
