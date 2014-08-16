@@ -13,10 +13,13 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['js/**/*.js', '!js/translations/**/*', '!js/spcomp/**/*', '!js/amxxpc/**/*'],
+          src: ['js/**/*.js', '!js/ace/**/*', '!js/translations/**/*', '!js/spcomp/**/*', '!js/amxxpc/**/*'],
           dest: 'build/',
         }, {
-          src: ['src/js/translations/en.js', 'src/js/translations/**/*'],
+          src: ['src/js/ace/ace.js', 'src/js/ace/**/*.js'],
+          dest: 'build/js/ace.js',
+        }, {
+          src: ['src/js/translations/en.js', 'src/js/translations/**/*.js'],
           dest: 'build/js/translations.js',
         }],
       },
