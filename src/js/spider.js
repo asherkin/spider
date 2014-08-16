@@ -68,6 +68,7 @@ setInterval(function() {
   }
 }, 3600000);
 
+ace.require('ace/ext/language_tools');
 var input = ace.edit('input');
 input.setTheme('ace/theme/chrome');
 input.getSession().setMode('ace/mode/c_cpp');
@@ -78,6 +79,11 @@ input.getSession().setUseWrapMode(true);
 input.getSession().setUseSoftTabs(false);
 input.commands.removeCommand('showSettingsMenu');
 input.commands.removeCommand('find');
+input.setOptions({
+  enableBasicAutocompletion: true,
+  enableSnippets: false,
+  enableLiveAutocompletion: false,
+});
 
 var gutter = document.getElementById('gutter');
 
