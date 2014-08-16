@@ -6,6 +6,7 @@
     "code.less",
     "grid.less",
     "buttons.less",
+    "button-groups.less",
     "alerts.less",
     "list-group.less",
     "close.less"
