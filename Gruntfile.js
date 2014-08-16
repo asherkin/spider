@@ -76,13 +76,21 @@ module.exports = function(grunt) {
           port: 0,
           base: 'build/',
           open: true,
+          middleware: function(connect, options, middlewares) {
+            middlewares.unshift(connect.compress({
+              filter: function(req, res) {
+                return true;
+              }
+            }));
+            return middlewares;
+          },
         }
       },
     },
 
     watch: {
       build: {
-        files: 'src/**/*',
+        files: ['Gruntfile.js', 'src/**/*'],
         tasks: 'default',
       },
     },
