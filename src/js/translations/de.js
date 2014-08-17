@@ -1,4 +1,5 @@
 translations['de'] = [
+  "Sorry, your browser is not supported.",
   "Spider hat ein Update erhalten.",
   "Aktualisiere die Seite um die neue Version zu laden.",
   "Die letzte Sitzung wurde wiederhergestellt.",

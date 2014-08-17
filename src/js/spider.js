@@ -44,7 +44,28 @@
     currentLanguage = lang;
   }
 
-  setLanguage(navigator.language.substr(0, 2));
+  var language = 'en';
+
+  if (navigator.languages) {
+    var i;
+    for (i = 0; i < navigator.languages.length; ++i) {
+      var lang = navigator.languages[i].substr(0, 2);
+
+      if (translations[lang]) {
+        language = lang;
+        break;
+      }
+    }
+    if (i === navigator.languages.length) {
+      console.log('No suitible language found: ' + navigator.languages);
+    }
+  } else if (navigator.language) {
+    language = navigator.language.substr(0, 2);
+  } else if (navigator.userLanguage) {
+    language = navigator.userLanguage.substr(0, 2);
+  }
+
+  setLanguage(language);
 
   function showUpdateNotice() {
     var notice = document.getElementById('update-alert');
