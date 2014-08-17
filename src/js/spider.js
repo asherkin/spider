@@ -90,7 +90,7 @@ var gutter = document.getElementById('gutter');
 
 function updateGutterWidth() {
   var realGutter = input.container.getElementsByClassName('ace_gutter')[0];
-  var width = parseInt(window.getComputedStyle(realGutter).width, 10);
+  var width = parseInt(getComputedStyle(realGutter).width, 10);
 
   gutter.style.width = (width + 30 + 1) + 'px';
 }

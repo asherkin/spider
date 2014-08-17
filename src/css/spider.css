@@ -1,14 +1,10 @@
-html, body, .container-fluid, #input-col, #input {
+html, body, .container-fluid, .container-fluid > :first-child, #input {
   height: 100%;
 }
 
-.container-fluid {
+.container-fluid > :first-child {
   padding-top: 20px;
   padding-bottom: 20px;
-}
-
-#input-col {
-  margin-bottom: 20px;
 }
 
 #gutter {
@@ -16,7 +12,6 @@ html, body, .container-fluid, #input-col, #input {
   left: 0;
   top: 0;
   bottom: 0;
-  z-index: 1;
   background-color: #ebebeb;
   display: none;
 }
@@ -33,6 +28,7 @@ html, body, .container-fluid, #input-col, #input {
   font-size: 12px;
   border: 1px solid #DCDCDC;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 #footer {
@@ -49,8 +45,15 @@ html, body, .container-fluid, #input-col, #input {
 }
 
 @media (min-width: 768px) {
-  #input-col {
-    margin-bottom: 0;
+  .container-fluid {
+    padding-right: 0;
+  }
+
+  .container-fluid > :last-child {
+    height: 100%;
+    padding-top: 20px;
+    padding-right: 30px;
+    overflow-y: scroll;
   }
 
   .ace_gutter-active-line {
