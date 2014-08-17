@@ -243,6 +243,7 @@
   if (location.hash.match(/^#\d+$/)) {
     localStorage.clear();
     template = 'Loading...';
+    compileButton.disabled = true;
 
     var xhr = new XMLHttpRequest();
     xhr.onload = function() {
@@ -250,7 +251,6 @@
 
       if (type == 'application/json') {
         input.setValue(JSON.parse(this.responseText).error, -1);
-        compileButton.disabled = true;
         return;
       }
 
@@ -271,10 +271,16 @@
           outputFile = filename;
         }
       }
+
+      compileButton.disabled = false;
     }
 
     xhr.open('GET', 'http://users.alliedmods.net/~asherkin/attachment.php?id=' + location.hash.slice(1), true);
     xhr.send();
+  } else {
+    input.on('input', function() {
+      localStorage['input-file'] = input.getValue();
+    });
   }
 
   var savedText = localStorage['input-file'];
@@ -375,10 +381,6 @@
 
     sessionAlert.classList.remove('hide');
   }
-
-  input.on('input', function() {
-    localStorage['input-file'] = input.getValue();
-  });
 
   function killDropEvent(event) {
     event.dataTransfer.dropEffect = 'none';
