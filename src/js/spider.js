@@ -56,6 +56,7 @@
         break;
       }
     }
+
     if (i === navigator.languages.length) {
       console.log('No suitible language found: ' + navigator.languages);
     }
@@ -237,6 +238,43 @@
     amxxpcSetup();
   } else {
     spcompSetup();
+  }
+
+  if (location.hash.match(/^#\d+$/)) {
+    localStorage.clear();
+    template = 'Loading...';
+
+    var xhr = new XMLHttpRequest();
+    xhr.onload = function() {
+      var type = this.getResponseHeader('Content-Type');
+
+      if (type == 'application/json') {
+        input.setValue(JSON.parse(this.responseText).error, -1);
+        compileButton.disabled = true;
+        return;
+      }
+
+      input.setValue(this.responseText, -1);
+
+      var filename = this.getResponseHeader('Content-Disposition');
+      if (filename) {
+        filename = filename.match(/filename="([^"]*)"/);
+        if (filename) {
+          filename = filename[1];
+
+          if (filename.match(/\.sp$/)) {
+            spcompSetup();
+          } else if (filename.match(/\.sma$/)) {
+            amxxpcSetup();
+          }
+
+          outputFile = filename;
+        }
+      }
+    }
+
+    xhr.open('GET', 'http://users.alliedmods.net/~asherkin/attachment.php?id=' + location.hash.slice(1), true);
+    xhr.send();
   }
 
   var savedText = localStorage['input-file'];

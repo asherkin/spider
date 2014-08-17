@@ -73,6 +73,7 @@ module.exports = function(grunt) {
         cache: {
           patterns: ['build/**/*', '!build/robots.txt'],
         },
+        network: ['http://users.alliedmods.net/~asherkin/attachment.php?id=*'],
       },
     },
 
