@@ -277,10 +277,6 @@
 
     xhr.open('GET', 'http://users.alliedmods.net/~asherkin/attachment.php?id=' + location.hash.slice(1), true);
     xhr.send();
-  } else {
-    input.on('input', function() {
-      localStorage['input-file'] = input.getValue();
-    });
   }
 
   var savedText = localStorage['input-file'];
@@ -381,6 +377,10 @@
 
     sessionAlert.classList.remove('hide');
   }
+
+  input.on('input', function() {
+    localStorage['input-file'] = input.getValue();
+  });
 
   function killDropEvent(event) {
     event.dataTransfer.dropEffect = 'none';
