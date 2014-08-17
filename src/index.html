@@ -9,14 +9,33 @@
     <link rel="stylesheet" href="css/spider.css">
   </head>
   <body>
-    <div id="no-support">
-      <span class="trans">Sorry, your browser is not supported.</span>
+    <div id="no-support-wrapper">
+      <div id="no-support">
+        <div class="trans">Sorry, your browser is not supported.</div>
+        <a href="#" class="btn btn-danger btn-lg hide">Try Anyway</a>
+      </div>
       <script type="application/javascript">
         (function() {
+          var container = document.getElementById('no-support-wrapper');
+
           if (!!window.localStorage && !!window.Worker &&
               !!window.Blob && !!window.FileReader &&
               (('download' in document.createElement('a')) || !!navigator.msSaveBlob)) {
-            document.getElementById('no-support').classList.add('hide');
+            container.classList.add('hide');
+          } else {
+            var banner = container.firstChild;
+            var button = banner.lastChild;
+
+            button.classList.remove('hide');
+            button.onclick = function() {
+              container.classList.add('hide');
+            };
+
+            function resize() {
+              banner.style.marginTop = '-' + (parseInt(getComputedStyle(banner).height, 10) / 2) + 'px';
+            };
+            window.onresize = resize;
+            resize();
           }
         })();
       </script>

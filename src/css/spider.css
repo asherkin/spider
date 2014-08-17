@@ -2,7 +2,7 @@ html, body, .container-fluid, .container-fluid > :first-child, #input {
   height: 100%;
 }
 
-#no-support {
+#no-support-wrapper {
   position: fixed;
   top: 0;
   bottom: 0;
@@ -12,19 +12,19 @@ html, body, .container-fluid, .container-fluid > :first-child, #input {
   z-index: 99;
 }
 
-#no-support span {
+#no-support {
   display: block;
   color: white;
   text-align: center;
-  background-color: #D9534F;
   font-weight: bold;
-  font-size: 2em;
+  font-size: 32px;
   position: absolute;
   top: 50%;
   left: 0;
   right: 0;
-  line-height: 2em;
-  margin-top: -1em;
+  line-height: 48px;
+  padding: 0 10px 10px;
+  margin-top: -29px;
 }
 
 .container-fluid > :first-child {
