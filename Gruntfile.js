@@ -37,12 +37,12 @@ module.exports = function(grunt) {
     },
 
     htmlmin: {
-      options: {
-        removeComments: true,
-        collapseWhitespace: true,
-        collapseBooleanAttributes: true,
-      },
       build: {
+        options: {
+          removeComments: true,
+          collapseWhitespace: true,
+          collapseBooleanAttributes: true,
+        },
         files: [{
           expand: true,
           cwd: 'src/',
@@ -64,12 +64,14 @@ module.exports = function(grunt) {
     },
 
     appcache: {
-      options: {
-        basePath: 'build/',
-      },
       build: {
+        options: {
+          basePath: 'build/',
+        },
         dest: 'build/spider.appcache',
-        cache: 'build/**/*',
+        cache: {
+          patterns: ['build/**/*', '!build/robots.txt'],
+        },
       },
     },
 
@@ -94,7 +96,7 @@ module.exports = function(grunt) {
     watch: {
       build: {
         files: ['Gruntfile.js', 'src/**/*'],
-        tasks: 'default',
+        tasks: 'build',
       },
     },
   });
@@ -108,7 +110,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect')
   grunt.loadNpmTasks('grunt-contrib-watch');
 
-  grunt.registerTask('default', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy']);
-  grunt.registerTask('dist', ['default', 'appcache']);
-  grunt.registerTask('serve', ['default', 'connect', 'watch']);
+  grunt.registerTask('build', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy']);
+  grunt.registerTask('default', ['build', 'appcache']);
+  grunt.registerTask('serve', ['build', 'connect', 'watch']);
 }
