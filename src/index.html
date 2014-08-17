@@ -9,6 +9,18 @@
     <link rel="stylesheet" href="css/spider.css">
   </head>
   <body>
+    <div id="no-support">
+      <span class="trans">Sorry, your browser is not supported.</span>
+      <script type="application/javascript">
+        (function() {
+          if (!!window.localStorage && !!window.Worker &&
+              !!window.Blob && !!window.FileReader &&
+              (('download' in document.createElement('a')) || !!navigator.msSaveBlob)) {
+            document.getElementById('no-support').classList.add('hide');
+          }
+        })();
+      </script>
+    </div>
     <div class="container-fluid">
       <div class="col-sm-7">
         <div id="gutter"></div>

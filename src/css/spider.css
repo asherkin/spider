@@ -2,6 +2,31 @@ html, body, .container-fluid, .container-fluid > :first-child, #input {
   height: 100%;
 }
 
+#no-support {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  z-index: 99;
+}
+
+#no-support span {
+  display: block;
+  color: white;
+  text-align: center;
+  background-color: #D9534F;
+  font-weight: bold;
+  font-size: 2em;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  line-height: 2em;
+  margin-top: -1em;
+}
+
 .container-fluid > :first-child {
   padding-top: 20px;
   padding-bottom: 20px;
