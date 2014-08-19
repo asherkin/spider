@@ -98,7 +98,7 @@ module.exports = function(grunt) {
     watch: {
       build: {
         files: ['Gruntfile.js', 'src/**/*'],
-        tasks: 'build',
+        tasks: ['newer:uglify:build', 'newer:cssmin:build', 'newer:htmlmin:build', 'newer:copy:build'],
       },
     },
   });
@@ -109,7 +109,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-htmlmin');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-appcache');
-  grunt.loadNpmTasks('grunt-contrib-connect')
+  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-newer');
   grunt.loadNpmTasks('grunt-contrib-watch');
 
   grunt.registerTask('build', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy']);
