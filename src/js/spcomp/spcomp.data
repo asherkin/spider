@@ -5020,6 +5020,16 @@ native WritePackFloat(Handle:pack, Float:val);
 native WritePackString(Handle:pack, const String:str[]);
 
 /**
+ * Packs a function pointer into a data pack.
+ *
+ * @param pack		Handle to the data pack.
+ * @param fktptr	Function pointer to add.
+ * @noreturn
+ * @error			Invalid handle.
+ */
+native WritePackFunction(Handle:pack, Function:fktptr);
+
+/**
  * Reads a cell from a data pack.
  *
  * @param pack		Handle to the data pack.
@@ -5047,6 +5057,15 @@ native Float:ReadPackFloat(Handle:pack);
  * @error			Invalid handle, or bounds error.
  */
 native ReadPackString(Handle:pack, String:buffer[], maxlen);
+
+/**
+ * Reads a function pointer from a data pack.
+ *
+ * @param pack		Handle to the data pack.
+ * @return			Function pointer.
+ * @error			Invalid handle, or bounds error.
+ */
+native Function ReadPackFunction(Handle:pack);
 
 /**
  * Resets the position in a data pack.
@@ -7786,6 +7805,15 @@ native bool:RemoveDir(const String:path[]);
  *						the execute bit set on Linux.  On Windows, the mode is ignored.
  */
 native bool:CreateDirectory(const String:path[], mode);
+
+/**
+ * Changes a file or directories permissions.
+ *
+ * @param path			Path to the file.
+ * @param mode			Permissions to set.
+ * @return				True on success, false otherwise.
+ */
+native bool:SetFilePermissions(const String:path[], mode);
 
 /**
  * Returns a file timestamp as a unix timestamp.
@@ -17920,6 +17948,7 @@ public __ext_tf2_SetNTVOptional()
 	MarkNativeAsOptional("TF2_GetClass");
 	MarkNativeAsOptional("TF2_IsPlayerInDuel");
 	MarkNativeAsOptional("TF2_IsHolidayActive");
+	MarkNativeAsOptional("TF2_RemoveWearable");
 }
 #endif
 /**

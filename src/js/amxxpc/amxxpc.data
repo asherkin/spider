@@ -2240,6 +2240,7 @@ native get_playersnum(flag=0);
  *                    "f" - match with part of name
  *                    "g" - match case insensitive
  *                    "h" - do not include HLTV proxies
+ *                    "i" - include connecting clients
  * @param team      String to match against if the "e" or "f" flag is specified
  *
  * @noreturn
@@ -2326,8 +2327,10 @@ native get_flags(flags, output[], len);
  *                    "j" - return last matched client instead of the first
  *                    "k" - match with userid
  *                    "l" - match case insensitively
+ *                    "m" - include connecting clients
  * @param ...       String to match against (integer if "k" flag is specified)
  *
+ * @return          Client index, or 0 if no client was found
  */
 native find_player(const flags[], ...);
 
@@ -16965,13 +16968,13 @@ enum
 #define TE_PLAYERATTACHMENT         124
 
 /**
- * TE_KILLPLAYERATTACHMENTS
+ * Will expire all TENTS attached to a player.
  *
  * @note
  * write_byte(TE_KILLPLAYERATTACHMENTS)
  * write_byte(entity index of player)
  */
-#define TE_KILLPLAYERATTACHMENTS    125       * Will expire all TENTS attached to a player.
+#define TE_KILLPLAYERATTACHMENTS    125
 
 /**
  * Much more compact shotgun message
