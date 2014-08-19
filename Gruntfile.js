@@ -1,4 +1,7 @@
 module.exports = function(grunt) {
+  require('time-grunt')(grunt);
+  require('jit-grunt')(grunt);
+
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
@@ -64,6 +67,10 @@ module.exports = function(grunt) {
       },
     },
 
+    concurrent: {
+      build: ['uglify', 'cssmin', 'htmlmin', 'copy'],
+    },
+
     appcache: {
       build: {
         options: {
@@ -103,16 +110,7 @@ module.exports = function(grunt) {
     },
   });
 
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-cssmin');
-  grunt.loadNpmTasks('grunt-contrib-htmlmin');
-  grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-appcache');
-  grunt.loadNpmTasks('grunt-contrib-connect')
-  grunt.loadNpmTasks('grunt-contrib-watch');
-
-  grunt.registerTask('build', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy']);
+  grunt.registerTask('build', ['clean', 'concurrent']);
   grunt.registerTask('default', ['build', 'appcache']);
   grunt.registerTask('serve', ['build', 'connect', 'watch']);
 }
