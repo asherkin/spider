@@ -13,26 +13,19 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['js/**/*.js', '!js/ace/**/*', '!js/translations/**/*', '!js/spcomp/**/*', '!js/amxxpc/**/*'],
+          src: ['js/worker.js'],
           dest: 'build/',
         }, {
-          src: ['src/js/ace/ace.js', 'src/js/ace/**/*.js'],
-          dest: 'build/js/ace.js',
-        }, {
-          src: ['src/js/translations/en.js', 'src/js/translations/**/*.js'],
-          dest: 'build/js/translations.js',
+          src: ['src/js/ace/ace.js', 'src/js/ace/**/*.js', 'js/FileSaver.js', 'src/js/translations/en.js', 'src/js/translations/**/*.js', 'src/js/spider.js'],
+          dest: 'build/js/spider.js',
         }],
       },
     },
 
     cssmin: {
       build: {
-        files: [{
-          expand: true,
-          cwd: 'src/',
-          src: ['css/**/*.css'],
-          dest: 'build/',
-        }],
+        src: ['src/css/bootstrap.css', 'src/css/spider.css'],
+        dest: 'build/css/spider.css',
       },
     },
 
@@ -58,7 +51,7 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['favicon.ico', 'robots.txt', 'js/spcomp/**/*', 'js/amxxpc/**/*'],
+          src: ['favicon.ico', 'robots.txt', 'js/spcomp/*', 'js/amxxpc/*'],
           dest: 'build/',
         }],
       },
@@ -71,7 +64,7 @@ module.exports = function(grunt) {
         },
         dest: 'build/spider.appcache',
         cache: {
-          patterns: ['build/**/*', '!build/robots.txt'],
+          patterns: ['build/**/*', '!build/index.html', '!build/robots.txt'],
         },
         network: ['http://users.alliedmods.net/~asherkin/attachment.php'],
       },
