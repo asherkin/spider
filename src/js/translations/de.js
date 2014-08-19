@@ -1,3 +1,4 @@
+// Nextra
 translations['de'] = [
   "Sorry, your browser is not supported.",
   "Spider hat ein Update erhalten.",

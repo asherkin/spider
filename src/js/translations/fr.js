@@ -1,3 +1,4 @@
+// Arkshine
 translations['fr'] = [
   "Sorry, your browser is not supported.",
   "Spider a été mis à jour.",
