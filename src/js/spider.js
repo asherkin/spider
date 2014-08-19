@@ -25,14 +25,14 @@
     var translatables = document.getElementsByClassName('trans');
 
     for (var i = 0; i < translatables.length; ++i) {
-      var index = current.indexOf(translatables[i].innerText);
+      var index = current.indexOf(translatables[i].textContent);
 
       if (index === -1) {
-        console.log('Phrase "' + translatables[i].innerText + '" not found.');
+        console.log('Phrase "' + translatables[i].textContent + '" not found.');
         continue;
       }
 
-      translatables[i].innerText = translations[lang][index];
+      translatables[i].textContent = translations[lang][index];
     };
 
     if (lang !== 'en') {

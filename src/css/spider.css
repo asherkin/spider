@@ -82,7 +82,7 @@ html, body, .container-fluid, .container-fluid > :first-child, #input {
     height: 100%;
     padding-top: 20px;
     padding-right: 30px;
-    overflow-y: scroll;
+    overflow-y: auto;
   }
 
   .ace_gutter-active-line {
