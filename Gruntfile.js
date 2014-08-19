@@ -77,6 +77,22 @@ module.exports = function(grunt) {
       },
     },
 
+    compress: {
+      build: {
+        options: {
+          mode: 'gzip',
+          level: 6,
+        },
+        files: [{
+          expand: true,
+          src: 'build/**/*',
+          rename: function(dest, src) {
+            return src + '.gz';
+          },
+        }],
+      },
+    },
+
     connect: {
       build: {
         options: {
@@ -109,11 +125,12 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-htmlmin');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-appcache');
+  grunt.loadNpmTasks('grunt-contrib-compress');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-newer');
   grunt.loadNpmTasks('grunt-contrib-watch');
 
   grunt.registerTask('build', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy']);
-  grunt.registerTask('default', ['build', 'appcache']);
+  grunt.registerTask('default', ['build', 'appcache', 'compress']);
   grunt.registerTask('serve', ['build', 'connect', 'watch']);
 }
