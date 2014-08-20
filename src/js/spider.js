@@ -480,7 +480,7 @@
     for (var i = 0; i < event.dataTransfer.files.length; ++i) {
       var file = event.dataTransfer.files[i];
 
-      if (!file.type.match(/^text\//) && !file.name.match(/\.(sma|sp|inc)$/)) {
+      if (!file.type.match(/^text\//) && !file.name.match(/\.(sma|inl|sp|inc)$/)) {
         continue;
       }
 
@@ -546,7 +546,7 @@
 
     var file = event.dataTransfer.files[0];
 
-    if (!file.type.match(/^text\//) && !file.name.match(/\.(sma|sp|inc)$/)) {
+    if (!file.type.match(/^text\//) && !file.name.match(/\.(sma|inl|sp|inc)$/)) {
       return;
     }
 
