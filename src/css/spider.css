@@ -249,10 +249,32 @@ small.text-muted a:focus, small.text-muted a:hover {
   background-color: #3D3F39;
 }
 
+#wide {
+  display: none;
+}
+
+#expando {
+  display: none;
+}
+
 @media (min-width: 768px) {
+  #wide {
+    display: block;
+  }
+
+  html.wide #expando {
+    display: block;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 60px;
+    background-color: #F0F0F0;
+  }
+
   html.wide #col-editor {
     width: 100%;
-    padding-right: 30px;
+    padding-right: 60px;
   }
 
   html.wide #col-sidebar {

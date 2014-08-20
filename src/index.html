@@ -44,6 +44,7 @@
         <div id="gutter"></div>
         <div id="input"></div>
       </div>
+      <div id="expando"></div>
       <div id="col-sidebar" class="col-sm-5">
         <div id="update-alert" class="alert alert-success alert-dismissible hide">
           <button type="button" class="close">&times;</button>
@@ -56,7 +57,7 @@
           <a class="trans alert-link" href="#">Want a clean slate instead?</a>
         </div>
         <div class="row">
-          <div class="col-md-7">
+          <div class="col-md-12">
             <div class="btn-group btn-group-justified">
               <div class="btn-group">
                 <button type="button" id="compiler-spcomp" class="btn btn-default">SourceMod</button>
@@ -66,7 +67,9 @@
               </div>
             </div>
           </div>
-          <div class="col-md-5">
+        </div>
+        <div class="row">
+          <div class="col-md-7">
             <div class="btn-group btn-group-justified">
               <div class="btn-group">
                 <button type="button" id="theme-light" class="btn btn-default">Light</button>
@@ -75,6 +78,9 @@
                 <button type="button" id="theme-dark" class="btn btn-default">Dark</button>
               </div>
             </div>
+          </div>
+          <div class="col-md-5">
+            <button type="button" id="wide" class="btn btn-default btn-block">Fullscreen</button>
           </div>
         </div>
         <pre id="output"></pre>
