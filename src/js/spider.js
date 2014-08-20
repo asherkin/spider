@@ -174,6 +174,16 @@
   lightButton.onclick = selectLightTheme;
   darkButton.onclick = selectDarkTheme;
 
+  document.getElementById('wide').onclick = function() {
+    document.documentElement.classList.add('wide');
+    input.resize();
+  };
+
+  document.getElementById('expando').onclick = function() {
+    document.documentElement.classList.remove('wide');
+    input.resize();
+  };
+
   var spcompTemplate = [
     '#pragma semicolon 1',
     '',

@@ -255,6 +255,32 @@ small.text-muted a:focus, small.text-muted a:hover {
 
 #expando {
   display: none;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  background-color: #F0F0F0;
+  cursor: pointer;
+}
+
+#expando::after {
+  position: absolute;
+  display: block;
+  top: 50%;
+  right: 30px;
+  line-height: 0;
+  font-size: 30px;
+  content: '\276e';
+  color: #777;
+}
+
+html.dark #expando {
+  background-color: #2F3129;
+}
+
+html.dark #expando::after {
+  color: #8F908A;
 }
 
 @media (min-width: 768px) {
@@ -264,12 +290,6 @@ small.text-muted a:focus, small.text-muted a:hover {
 
   html.wide #expando {
     display: block;
-    position: fixed;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 60px;
-    background-color: #F0F0F0;
   }
 
   html.wide #col-editor {
@@ -343,7 +363,7 @@ html.dark small.text-muted a:focus, html.dark small.text-muted a:hover {
   color: #428bca;
 }
 
-html.dark html.close {
+html.dark .close {
   color: #F8F8F2;
 }
 
@@ -382,4 +402,8 @@ html.dark #include-drop.hover {
   border-bottom-color: #31708f;
   border-left-color: #31708f;
   border-right-color: #31708f;
+}
+
+#include-drop.hover:first-child {
+  border-top-color: #31708f;
 }
