@@ -268,10 +268,12 @@ small.text-muted a:focus, small.text-muted a:hover {
   position: absolute;
   display: block;
   top: 50%;
-  right: 30px;
+  left: 0;
+  right: 0;
   line-height: 0;
+  text-align: center;
   font-size: 30px;
-  content: '\276e';
+  content: '\25c0';
   color: #777;
 }
 
