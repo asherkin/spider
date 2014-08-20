@@ -121,16 +121,58 @@
   input.renderer.$gutterLayer.on('changeGutterWidth', updateGutterWidth);
   updateGutterWidth();
 
-  var output = document.getElementById('output');
-
   var spcompButton = document.getElementById('compiler-spcomp');
   var amxxpcButton = document.getElementById('compiler-amxxpc');
+
+  var lightButton = document.getElementById('theme-light');
+  var darkButton = document.getElementById('theme-dark');
+
+  var output = document.getElementById('output');
 
   var compileButton = document.getElementById('compile');
   var downloadButton = document.getElementById('download');
 
   var includes = document.getElementById('includes');
   var includeDrop = document.getElementById('include-drop');
+
+  var theme;
+
+  function selectLightTheme() {
+    if (theme === 'light') {
+      return;
+    }
+
+    localStorage['theme'] = theme = 'light';
+
+    document.documentElement.classList.remove('dark');
+    input.setTheme('ace/theme/textmate');
+
+    darkButton.classList.remove('active');
+    lightButton.classList.add('active');
+  }
+
+  function selectDarkTheme() {
+    if (theme === 'dark') {
+      return;
+    }
+
+    localStorage['theme'] = theme = 'dark';
+
+    document.documentElement.classList.add('dark');
+    input.setTheme('ace/theme/monokai');
+
+    lightButton.classList.remove('active');
+    darkButton.classList.add('active');
+  }
+
+  if (localStorage['theme'] === 'dark') {
+    selectDarkTheme();
+  } else {
+    selectLightTheme();
+  }
+
+  lightButton.onclick = selectLightTheme;
+  darkButton.onclick = selectDarkTheme;
 
   var spcompTemplate = [
     '#pragma semicolon 1',
@@ -231,17 +273,24 @@
     amxxpcButton.classList.add('active');
   }
 
-  spcompButton.onclick = spcompSetup;
-  amxxpcButton.onclick = amxxpcSetup;
-
   if (localStorage['compiler'] === 'amxxpc') {
     amxxpcSetup();
   } else {
     spcompSetup();
   }
 
+  spcompButton.onclick = spcompSetup;
+  amxxpcButton.onclick = amxxpcSetup;
+
   if (location.hash.match(/^#\d+$/)) {
-    localStorage.clear();
+    for (var i = localStorage.length - 1; i >= 0; --i) {
+      var key = localStorage.key(i);
+
+      if (key.match(/^\//)) {
+        delete localStorage[key];
+      }
+    }
+
     template = 'Loading...';
     compileButton.disabled = true;
 

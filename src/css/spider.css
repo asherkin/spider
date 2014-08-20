@@ -114,7 +114,7 @@ html, body, .container-fluid, .container-fluid > :first-child, #input {
   }
 }
 
-.row, .btn-group-justified {
+.row {
   margin-bottom: 20px;
 }
 
@@ -243,4 +243,110 @@ small.text-muted a {
 small.text-muted a:focus, small.text-muted a:hover {
   color: #2A6496;
   text-decoration: none;
+}
+
+.ace-monokai .ace_gutter .ace_gutter-active-line {
+  background-color: #3D3F39;
+}
+
+.dark body {
+  background-color: #272822;
+  color: #F8F8F2;
+}
+
+.dark #gutter {
+  background-color: #2F3129;
+}
+
+.dark #input {
+  border-color: #3D3F39;
+}
+
+@media (min-width: 768px) {
+  .dark #input {
+    border-color: transparent;
+  }
+}
+
+.dark pre {
+  background-color: #2F3129;
+  color: #F8F8F2;
+  border-color: #3D3F39;
+}
+
+.dark .btn-default {
+  color: #F8F8F2;
+  background-color: #272822;
+  border-color: #3D3F39;
+}
+
+.dark .btn-default.active, .dark .btn-default:active, .dark .btn-default:focus, .dark .btn-default:hover, .dark .open>.dropdown-toggle.btn-default {
+  color: #F8F8F2;
+  background-color: #3C3D37;
+  border-color: #4A4C45;
+}
+
+.dark .btn-primary {
+  color: #F8F8F2;
+  background-color: #285e8e;
+  border-color: #3071a9;
+}
+
+.dark .btn-primary.active, .dark .btn-primary:active, .dark .btn-primary:focus, .dark .btn-primary:hover, .dark .open>.dropdown-toggle.btn-primary {
+  color: #F8F8F2;
+  background-color: #357ebd;
+  border-color: #428bca;
+}
+
+.dark .text-muted {
+  color: #8F908A;
+}
+
+.dark small.text-muted a {
+  color: #8F908A;
+}
+
+.dark small.text-muted a:focus, .dark small.text-muted a:hover {
+  color: #2A6496;
+}
+
+.dark .close {
+  color: #F8F8F2;
+}
+
+.dark .close:focus, .dark .close:hover {
+  color: #F8F8F2;
+}
+
+.dark .alert-info {
+  background-color: #245269;
+  border-color: #31708f;
+  color: #d9edf7;
+}
+
+.dark .alert-info .alert-link {
+  color: #bce8f1;
+}
+
+.dark .alert-success {
+  background-color: #2b542c;
+  border-color: #3c763d;
+  color: #dff0d8;
+}
+
+.dark .alert-success .alert-link {
+  color: #d6e9c6;
+}
+
+.dark .list-group-item {
+  background-color: #272822;
+  border-color: #3D3F39;
+}
+
+.dark #include-drop.hover {
+  color: #d9edf7;
+  background-color: #245269;
+  border-bottom-color: #31708f;
+  border-left-color: #31708f;
+  border-right-color: #31708f;
 }
