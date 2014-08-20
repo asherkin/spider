@@ -92,7 +92,7 @@
   }, 3600000);
 
   var input = ace.edit('input');
-  input.setTheme('ace/theme/chrome');
+  input.setTheme('ace/theme/textmate');
   input.getSession().setMode('ace/mode/c_cpp');
   input.setShowFoldWidgets(false);
   input.setShowPrintMargin(false);

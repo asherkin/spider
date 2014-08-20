@@ -37,7 +37,7 @@ html, body, .container-fluid, .container-fluid > :first-child, #input {
   left: 0;
   top: 0;
   bottom: 0;
-  background-color: #ebebeb;
+  background-color: #F0F0F0;
   display: none;
 }
 
