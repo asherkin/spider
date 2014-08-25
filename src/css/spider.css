@@ -50,11 +50,6 @@ html, body, .container-fluid, #col-editor, #input {
 }
 
 #input {
-  white-space: pre;
-  /*font-family: Menlo, Monaco, Consolas, "Courier New", monospace;*/
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
-  line-height: normal;
-  font-size: 12px;
   border: 1px solid #DCDCDC;
   border-radius: 4px;
   background-color: transparent;
