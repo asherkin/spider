@@ -401,6 +401,10 @@ html.dark #include-drop.hover {
   border-right-color: #31708f;
 }
 
+html.dark .ace_search {
+  color: #000;
+}
+
 #include-drop.hover:first-child {
   border-top-color: #31708f;
 }
