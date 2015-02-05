@@ -892,7 +892,7 @@ methodmap ArrayList < Handle {
 	public native ArrayList(int blocksize=1, int startsize=0);
 
 	// Clears an array of all entries.  This is the same as Resize(0).
-	public native void ClearArray();
+	public native void Clear();
 
 	// Clones an array, returning a new handle with the same size and data.
 	// This should NOT be confused with CloneHandle. This is a completely new
@@ -5935,9 +5935,9 @@ methodmap DataPack < Handle
 };
 
 /**
- * vim: set ts=4 :
+ * vim: set ts=4 sw=4 tw=99 noet :
  * =============================================================================
- * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+ * SourceMod (C)2004-2014 AlliedModders LLC.  All rights reserved.
  * =============================================================================
  *
  * This file is part of the SourceMod/SourcePawn SDK.
@@ -5972,35 +5972,6 @@ methodmap DataPack < Handle
 #define _dbi_included
 
 /**
- * @handle Driver
- *
- * Contains information about an SQL driver.
- */
- 
-/**
- * @handle Database
- *
- * Contains information about a database connection.
- */
- 
-/**
- * @handle Query
- *
- * Contains information about an active query and its 
- * result sets.
- */
- 
-/**
- * @handle Statement : Query
- *
- * Extends a Query Handle and can be used as a Query Handle.
- * Statement Handles are for prepared queries and contain
- * their own function for binding parameters.  Statement
- * Handles can be used instead of database Handles in a few
- * select functions.
- */
-
-/**
  * Describes a database field fetch status.
  */
 enum DBResult
@@ -6031,6 +6002,345 @@ enum DBPriority
 	DBPrio_Low = 2,			/**< Low priority. */
 };
 
+// A Driver represents a database backend, currently MySQL or SQLite.
+//
+// Driver handles cannot be closed.
+methodmap DBDriver < Handle
+{
+	// Finds the driver associated with a name.
+	//
+	// Supported driver strings:
+	//    mysql
+	//    sqlite
+	//
+	// @param name          Driver identification string, or an empty string
+	//                      to return the default driver.
+	// @return              Driver handle, or null on failure.
+	public static native DBDriver Find(const char[] name = "");
+
+	// Retrieves a driver's identification string.
+	//
+	// Example: "mysql", "sqlite"
+	//
+	// @param ident         Identification string buffer.
+	// @param maxlength     Maximum length of the buffer.
+	public native void GetIdentifier(char[] ident, int maxlength);
+
+	// Retrieves a driver's product string.
+	//
+	// Example: "MySQL", "SQLite"
+	//
+	// @param product       Product string buffer.
+	// @param maxlength     Maximum length of the buffer.
+	public native void GetProduct(char[] product, int maxlength);
+};
+
+// Represents a set of results returned from executing a query.
+methodmap DBResultSet < Handle
+{
+	// Advances to the next set of results.
+	//
+	// In some SQL implementations, multiple result sets can exist on one query.  
+	// This is possible in MySQL with simple queries when executing a CALL 
+	// query.  If this is the case, all result sets must be processed before
+	// another query is made.
+	//
+	// @return             True if there was another result set, false otherwise.
+	public native bool FetchMoreResults();
+
+	// Returns whether or not a result set exists.  This will
+	// return true even if 0 results were returned, but false
+	// on queries like UPDATE, INSERT, or DELETE.
+	property bool HasResults {
+		public native get();
+	}
+
+	// Retrieves the number of rows in the last result set.
+	// 
+	// @param query        A query (or statement) Handle.
+	// @return             Number of rows in the current result set.
+	property int RowCount {
+		public native get();
+	}
+
+	// Retrieves the number of fields in the last result set.
+	property int FieldCount {
+		public native get();
+	}
+
+	// Returns the number of affected rows from the query that generated this
+	// result set.
+	property int AffectedRows {
+		public native get();
+	}
+
+	// Returns the insert id from the query that generated this result set.
+	property int InsertId {
+		public native get();
+	}
+
+	// Retrieves the name of a field by index.
+	// 
+	// @param field        Field number (starting from 0).
+	// @param name         Name buffer.
+	// @param maxlength    Maximum length of the name buffer.
+	// @error              Invalid field index, or no current result set.
+	public native void FieldNumToName(int field, char[] name, int maxlength);
+
+	// Retrieves a field index by name.
+	// 
+	// @param name         Name of the field (case sensitive).
+	// @param field        Variable to store field index in.
+	// @return             True if found, false if not found.
+	// @error              No current result set.
+	public native bool FieldNameToNum(const char[] name, int &field);
+
+	// Fetches a row from the current result set.  This must be 
+	// successfully called before any results are fetched.
+	//
+	// If this function fails, _MoreResults can be used to
+	// tell if there was an error or the result set is finished.
+	// 
+	// @return             True if a row was fetched, false otherwise.
+	public native bool FetchRow();
+
+	// Returns if there are more rows.
+	// 
+	// @return             True if there are more rows, false otherwise.
+	property bool MoreRows {
+		public native get();
+	}
+
+	// Rewinds a result set back to the first result.
+	// 
+	// @return             True on success, false otherwise.
+	// @error              No current result set.
+	public native bool Rewind();
+
+	// Fetches a string from a field in the current row of a result set.  
+	// If the result is NULL, an empty string will be returned.  A NULL 
+	// check can be done with the result parameter, or SQL_IsFieldNull().
+	// 
+	// @param field        The field index (starting from 0).
+	// @param buffer       String buffer.
+	// @param maxlength    Maximum size of the string buffer.
+	// @param result       Optional variable to store the status of the return value.
+	// @return             Number of bytes written.
+	// @error              Invalid field index, invalid type conversion requested
+	//                     from the database, or no current result set.
+	public native int FetchString(int field, char[] buffer, int maxlength,
+		                          DBResult &result=DBVal_Error);
+
+	// Fetches a float from a field in the current row of a result set.  
+	// If the result is NULL, a value of 0.0 will be returned.  A NULL 
+	// check can be done with the result parameter, or SQL_IsFieldNull().
+	// 
+	// @param field        The field index (starting from 0).
+	// @param result       Optional variable to store the status of the return value.
+	// @return             A float value.
+	// @error              Invalid field index, invalid type conversion requested
+	//                     from the database, or no current result set.
+	public native float FetchFloat(int field, DBResult &result=DBVal_Error);
+
+	// Fetches an integer from a field in the current row of a result set.  
+	// If the result is NULL, a value of 0 will be returned.  A NULL 
+	// check can be done with the result parameter, or SQL_IsFieldNull().
+	// 
+	// @param field        The field index (starting from 0).
+	// @param result       Optional variable to store the status of the return value.
+	// @return             An integer value.
+	// @error              Invalid field index, invalid type conversion requested
+	//                     from the database, or no current result set.
+	public native int FetchInt(int field, DBResult &result=DBVal_Error);
+
+	// Returns whether a field's data in the current row of a result set is 
+	// NULL or not.  NULL is an SQL type which means "no data."
+	// 
+	// @param field        The field index (starting from 0).
+	// @return             True if data is NULL, false otherwise.
+	// @error              Invalid field index, or no current result set.
+	public native bool IsFieldNull(Handle query, int field);
+
+	// Returns the length of a field's data in the current row of a result
+	// set.  This only needs to be called for strings to determine how many
+	// bytes to use.  Note that the return value does not include the null
+	// terminator.
+	// 
+	// @param field        The field index (starting from 0).
+	// @return             Number of bytes for the field's data size.
+	// @error              Invalid field index or no current result set.
+	public native int FetchSize(int field);
+};
+
+// Callback for a successful transaction.
+// 
+// @param db            Database handle.
+// @param data          Data value passed to SQL_ExecuteTransaction().
+// @param numQueries    Number of queries executed in the transaction.
+// @param results       An array of Query handle results, one for each of numQueries. They are closed automatically.
+// @param queryData     An array of each data value passed to SQL_AddQuery().
+typedef SQLTxnSuccess = function void (Database db, any data, int numQueries, Handle[] results, any[] queryData);
+
+// Callback for a failed transaction.
+//
+// @param db            Database handle.
+// @param data          Data value passed to SQL_ExecuteTransaction().
+// @param numQueries    Number of queries executed in the transaction.
+// @param error         Error message.
+// @param failIndex      Index of the query that failed, or -1 if something else.
+// @param queryData     An array of each data value passed to SQL_AddQuery().
+typedef SQLTxnFailure = function void (Database db, any data, int numQueries, const char[] error, int failIndex, any[] queryData);
+
+// A Transaction is a collection of SQL statements that must all execute
+// successfully or not at all.
+methodmap Transaction < Handle
+{
+	// Create a new transaction.
+	public native Transaction();
+
+	// Adds a query to the transaction.
+	//
+	// @param query        Query string.
+	// @param data         Extra data value to pass to the final callback.
+	// @return             The index of the query in the transaction's query list.
+	public native int AddQuery(const char[] query, any data=0);
+};
+
+// A DBStatement is a pre-compiled SQL query that may be executed multiple
+// times with different parameters. A DBStatement holds a reference to the
+// Database that prepared it.
+methodmap DBStatement < Handle
+{
+	// Binds a parameter in a prepared statement to a given integer value.
+	// 
+	// @param param         The parameter index (starting from 0).
+	// @param number        The number to bind.
+	// @param signed        True to bind the number as signed, false to 
+	//                      bind it as unsigned.
+	// @error               Invalid parameter index, or SQL error.
+	public native void BindInt(int param, int number, bool signed=true);
+
+	// Binds a parameter in a prepared statement to a given float value.
+	// 
+	// @param param         The parameter index (starting from 0).
+	// @param value         The float number to bind.
+	// @error               Invalid parameter index, or SQL error.
+	public native void BindFloat(int param, float value);
+
+	// Binds a parameter in a prepared statement to a given string value.
+	// 
+	// @param param         The parameter index (starting from 0).
+	// @param value         The string to bind.
+	// @param copy          Whether or not SourceMod should copy the value
+	//                      locally if necessary.  If the string contents
+	//                      won't change before calling SQL_Execute(), this
+	//                      can be set to false for optimization.
+	// @error               Invalid parameter index, or SQL error.
+	public native void BindString(int param, const char[] value, bool copy);
+};
+
+// Callback for receiving asynchronous database connections.
+//
+// @param db            Handle to the database connection.
+// @param error			Error string if there was an error.  The error could be 
+//						empty even if an error condition exists, so it is important 
+//						to check the actual Handle value instead.
+// @param data			Data passed in via the original threaded invocation.
+typedef SQLConnectCallback = function void (Database db, const char[] error, any data);
+
+// Callback for receiving asynchronous database query results.
+//
+// @param db            Cloned handle to the database connection.
+// @param results       Result object, or null on failure.
+// @param error			Error string if there was an error.  The error could be 
+//						empty even if an error condition exists, so it is important 
+//						to check the actual results value instead.
+// @param data			Data passed in via the original threaded invocation.
+typedef SQLQueryCallback = function void (Database db, DBResultSet results, const char[] error, any data);
+
+// A Database represents a live connection to a database, either over the
+// wire, through a unix domain socket, or over an open file.
+methodmap Database < Handle
+{
+	// Connects to a database asynchronously, so the game thread is not blocked.
+	//
+	// @param callback        Callback. If no driver was found, the owner is null.
+	// @param name            Database configuration name.
+	// @param data            Extra data value to pass to the callback.
+	public static native void Connect(SQLConnectCallback callback, const char[] name="default", any data=0);
+
+	// Returns the driver for this database connection.
+	property DBDriver Driver {
+		public native get();
+	}
+
+	// Sets the character set of the connection. 
+	// Like SET NAMES .. in mysql, but stays after connection problems.
+	// 
+	// Example: "utf8", "latin1"
+	//
+	// @param characterset  The character set string to change to.
+	// @return              True, if character set was changed, false otherwise.
+	public native bool SetCharset(const char[] charset);
+
+	// Escapes a database string for literal insertion.  This is not needed
+	// for binding strings in prepared statements.  
+	//
+	// Generally, database strings are inserted into queries enclosed in 
+	// single quotes (').  If user input has a single quote in it, the 
+	// quote needs to be escaped.  This function ensures that any unsafe 
+	// characters are safely escaped according to the database engine and 
+	// the database's character set.
+	//
+	// NOTE: SourceMod only guarantees properly escaped strings when the query
+	// encloses the string in ''. While drivers tend to allow " instead, the string
+	// may be not be escaped (for example, on SQLite)!
+	//
+	// @param string         String to quote.
+	// @param buffer         Buffer to store quoted string in.
+	// @param maxlength      Maximum length of the buffer.
+	// @param written        Optionally returns the number of bytes written.
+	// @return               True on success, false if buffer is not big enough.
+	//                       The buffer must be at least 2*strlen(string)+1.
+	public native bool Escape(const char[] string, char[] buffer, int maxlength, int &written=0);
+
+	// Returns whether a database is the same connection as another database.
+	public native bool IsSameConnection(Database other);
+
+	// Executes a query via a thread. The result handle is passed through the
+	// callback.
+	//
+	// The database handle returned through the callback is always a new Handle,
+	// and if necessary, IsSameConnection() should be used to test against other
+	// conenctions.
+	//
+	// The result handle returned through the callback is temporary and destroyed 
+	// at the end of the callback.
+	//
+	// @param callback       Callback.
+	// @param query          Query string.
+	// @param data           Extra data value to pass to the callback.
+	// @param prio           Priority queue to use.
+	public native void Query(SQLQueryCallback callback, const char[] query,
+	                         any data = 0,
+	                         DBPriority prio = DBPrio_Normal);
+
+	// Sends a transaction to the database thread. The transaction handle is
+	// automatically closed. When the transaction completes, the optional
+	// callback is invoked.
+	//
+	// @param txn           A transaction handle.
+	// @param onSuccess     An optional callback to receive a successful transaction.
+	// @param onError       An optional callback to receive an error message.
+	// @param data          An optional value to pass to callbacks.
+	// @param prio          Priority queue to use.
+	public native void Execute(Transaction txn,
+	                           SQLTxnSuccess:onSuccess = INVALID_FUNCTION,
+	                           SQLTxnFailure:onError = INVALID_FUNCTION,
+	                           any data = 0,
+	                           DBPriority priority = DBPrio_Normal);
+};
+
 /**
  * Creates an SQL connection from a named configuration.
  *
@@ -6041,7 +6351,7 @@ enum DBPriority
  * @param maxlength		Maximum length of the error buffer.
  * @return				A database connection Handle, or INVALID_HANDLE on failure.
  */
-native Handle:SQL_Connect(const String:confname[], bool:persistent, String:error[], maxlength);
+native Database SQL_Connect(const char[] confname, bool persistent, char[] error, int maxlength);
 
 /**
  * Creates a default SQL connection.
@@ -6053,7 +6363,7 @@ native Handle:SQL_Connect(const String:confname[], bool:persistent, String:error
  * @return				A database connection Handle, or INVALID_HANDLE on failure.
  * 						On failure the error buffer will be filled with a message.
  */
-stock Handle:SQL_DefConnect(String:error[], maxlength, bool:persistent=true)
+stock Database SQL_DefConnect(char[] error, int maxlength, bool persistent=true)
 {
 	return SQL_Connect("default", persistent, error, maxlength);
 }
@@ -6079,10 +6389,10 @@ stock Handle:SQL_DefConnect(String:error[], maxlength, bool:persistent=true)
  * 						On failure the error buffer will be filled with a message.
  * @error				Invalid KeyValues handle.
  */
-native Handle:SQL_ConnectCustom(Handle:keyvalues,
-								String:error[],
-								maxlength,
-								bool:persistent);
+native Database SQL_ConnectCustom(Handle keyvalues,
+			  					  char[] error,
+			  					  maxlength,
+			  					  bool persistent);
 
 /**
  * Grabs a handle to an SQLite database, creating one if it does not exist.  
@@ -6099,11 +6409,11 @@ native Handle:SQL_ConnectCustom(Handle:keyvalues,
  * @return				A database connection Handle, or INVALID_HANDLE on failure.
  * 						On failure the error buffer will be filled with a message.
  */
-stock Handle:SQLite_UseDatabase(const String:database[],
-								String:error[], 
-								maxlength)
+stock Database SQLite_UseDatabase(const char[] database,
+			  					  char[] error, 
+			  					  maxlength)
 {
-	new Handle:kv, Handle:db;
+	Handle kv, db;
 
 	kv = CreateKeyValues("");
 	KvSetString(kv, "driver", "sqlite");
@@ -6120,14 +6430,14 @@ stock Handle:SQLite_UseDatabase(const String:database[],
  * This function is deprecated.  Use SQL_ConnectCustom or SQLite_UseDatabase instead.
  */
 #pragma deprecated Use SQL_ConnectCustom instead.
-native Handle:SQL_ConnectEx(Handle:driver, 
+native Handle SQL_ConnectEx(Handle driver, 
 							const String:host[],
 							const String:user[], 
 							const String:pass[],
 							const String:database[],
-							String:error[],
+							char[] error,
 							maxlength,
-							bool:persistent=true,
+							bool persistent=true,
 							port=0,
 							maxTimeout=0);
 							
@@ -6137,7 +6447,7 @@ native Handle:SQL_ConnectEx(Handle:driver,
  * @param name			Configuration name.
  * @return				True if it exists, false otherwise.
  */
-native bool:SQL_CheckConfig(const String:name[]);
+native bool SQL_CheckConfig(const char[] name);
 
 /**
  * Returns a driver Handle from a name string.
@@ -6149,7 +6459,7 @@ native bool:SQL_CheckConfig(const String:name[]);
  *						string to return the default driver.
  * @return				Driver Handle, or INVALID_HANDLE on failure.
  */
-native Handle:SQL_GetDriver(const String:name[]="");
+native Handle SQL_GetDriver(const char[] name="");
 
 /**
  * Reads the driver of an opened database.
@@ -6159,7 +6469,7 @@ native Handle:SQL_GetDriver(const String:name[]="");
  * @param ident_length	Maximum length of the buffer.
  * @return				Driver Handle.
  */
-native Handle:SQL_ReadDriver(Handle:database, String:ident[]="", ident_length=0);
+native Handle SQL_ReadDriver(Handle database, char[] ident="", ident_length=0);
 
 /**
  * Retrieves a driver's identification string.
@@ -6172,7 +6482,7 @@ native Handle:SQL_ReadDriver(Handle:database, String:ident[]="", ident_length=0)
  * @noreturn
  * @error				Invalid Handle other than INVALID_HANDLE.
  */
-native SQL_GetDriverIdent(Handle:driver, String:ident[], maxlength);
+native void SQL_GetDriverIdent(Handle driver, char[] ident, int maxlength);
 
 /**
  * Retrieves a driver's product string.
@@ -6185,7 +6495,7 @@ native SQL_GetDriverIdent(Handle:driver, String:ident[], maxlength);
  * @noreturn
  * @error				Invalid Handle other than INVALID_HANDLE.
  */
-native SQL_GetDriverProduct(Handle:driver, String:product[], maxlength);
+native void SQL_GetDriverProduct(Handle driver, char[] product, int maxlength);
 
 /**
  * Sets the character set of the current connection. 
@@ -6197,7 +6507,7 @@ native SQL_GetDriverProduct(Handle:driver, String:product[], maxlength);
  * @param characterset  The character set string to change to.
  * @return              True, if character set was changed, false otherwise.
  */
-native bool:SQL_SetCharset(Handle:database, const String:charset[]);
+native bool SQL_SetCharset(Handle database, const char[] charset);
 
 /**
  * Returns the number of affected rows from the last query.
@@ -6206,7 +6516,7 @@ native bool:SQL_SetCharset(Handle:database, const String:charset[]);
  * @return				Number of rows affected by the last query.
  * @error				Invalid database or statement Handle.
  */
-native SQL_GetAffectedRows(Handle:hndl);
+native int SQL_GetAffectedRows(Handle hndl);
 
 /**
  * Returns the last query's insertion id.
@@ -6215,7 +6525,7 @@ native SQL_GetAffectedRows(Handle:hndl);
  * @return				Last query's insertion id.
  * @error				Invalid database, query, or statement Handle.
  */
-native SQL_GetInsertId(Handle:hndl);
+native int SQL_GetInsertId(Handle hndl);
 
 /**
  * Returns the error reported by the last query.
@@ -6226,7 +6536,7 @@ native SQL_GetInsertId(Handle:hndl);
  * @return				True if there was an error, false otherwise.
  * @error				Invalid database, query, or statement Handle.
  */
-native bool:SQL_GetError(Handle:hndl, String:error[], maxlength);
+native bool SQL_GetError(Handle hndl, char[] error, int maxlength);
 
 /**
  * Escapes a database string for literal insertion.  This is not needed
@@ -6251,19 +6561,19 @@ native bool:SQL_GetError(Handle:hndl, String:error[], maxlength);
  *						The buffer must be at least 2*strlen(string)+1.
  * @error				Invalid database or statement Handle.
  */
-native bool:SQL_EscapeString(Handle:database, 
-							 const String:string[], 
-							 String:buffer[], 
-							 maxlength, 
-							 &written=0);
+native bool SQL_EscapeString(Handle database, 
+							 const char[] string, 
+							 char[] buffer, 
+							 int maxlength, 
+							 int &written=0);
 
 /**
  * This is a backwards compatibility stock.  You should use SQL_EscapeString() 
  * instead, as this function will probably be deprecated in SourceMod 1.1.
  */
-stock bool:SQL_QuoteString(Handle:database,
-						   const String:string[],
-						   String:buffer[],
+stock bool SQL_QuoteString(Handle database,
+						   const char[] string,
+						   char[] buffer,
 						   maxlength,
 						   &written=0)
 {
@@ -6282,7 +6592,7 @@ stock bool:SQL_QuoteString(Handle:database,
  *						SQL_GetError to find the last error.
  * @error				Invalid database Handle.
  */
-native bool:SQL_FastQuery(Handle:database, const String:query[], len=-1);
+native bool SQL_FastQuery(Handle database, const char[] query, int len=-1);
 
 /**
  * Executes a simple query and returns a new query Handle for
@@ -6297,7 +6607,7 @@ native bool:SQL_FastQuery(Handle:database, const String:query[], len=-1);
  *						otherwise.  The Handle must be freed with CloseHandle().
  * @error				Invalid database Handle.
  */
-native Handle:SQL_Query(Handle:database, const String:query[], len=-1);
+native DBResultSet SQL_Query(Handle database, const char[] query, int len=-1);
 
 /**
  * Creates a new prepared statement query.  Prepared statements can
@@ -6315,7 +6625,7 @@ native Handle:SQL_Query(Handle:database, const String:query[], len=-1);
  *						otherwise.  The Handle must be freed with CloseHandle().
  * @error				Invalid database Handle.
  */
-native Handle:SQL_PrepareQuery(Handle:database, const String:query[], String:error[], maxlength);
+native DBStatement SQL_PrepareQuery(Handle database, const char[] query, char[] error, int maxlength);
 
 /**
  * Advances to the next set of results.
@@ -6329,7 +6639,7 @@ native Handle:SQL_PrepareQuery(Handle:database, const String:query[], String:err
  * @return				True if there was another result set, false otherwise.
  * @error				Invalid query Handle.
  */
-native bool:SQL_FetchMoreResults(Handle:query);
+native bool SQL_FetchMoreResults(Handle query);
 
 /**
  * Returns whether or not a result set exists.  This will
@@ -6340,7 +6650,7 @@ native bool:SQL_FetchMoreResults(Handle:query);
  * @return				True if there is a result set, false otherwise.
  * @error				Invalid query Handle.
  */
-native bool:SQL_HasResultSet(Handle:query);
+native bool SQL_HasResultSet(Handle query);
 
 /**
  * Retrieves the number of rows in the last result set.
@@ -6349,7 +6659,7 @@ native bool:SQL_HasResultSet(Handle:query);
  * @return				Number of rows in the current result set.
  * @error				Invalid query Handle.
  */
-native SQL_GetRowCount(Handle:query);
+native int SQL_GetRowCount(Handle query);
 
 /**
  * Retrieves the number of fields in the last result set.
@@ -6358,7 +6668,7 @@ native SQL_GetRowCount(Handle:query);
  * @return				Number of fields in the current result set.
  * @error				Invalid query Handle.
  */
-native SQL_GetFieldCount(Handle:query);
+native int SQL_GetFieldCount(Handle query);
 
 /**
  * Retrieves the name of a field by index.
@@ -6367,11 +6677,10 @@ native SQL_GetFieldCount(Handle:query);
  * @param field			Field number (starting from 0).
  * @param name			Name buffer.
  * @param maxlength		Maximum length of the name buffer.
- * @noreturn
  * @error				Invalid query Handle, invalid field index, or
  *						no current result set.
  */
-native SQL_FieldNumToName(Handle:query, field, String:name[], maxlength);
+native void SQL_FieldNumToName(Handle query, int field, String:name[], int maxlength);
 
 /**
  * Retrieves a field index by name.
@@ -6382,7 +6691,7 @@ native SQL_FieldNumToName(Handle:query, field, String:name[], maxlength);
  * @return				True if found, false if not found.
  * @error				Invalid query Handle or no current result set.
  */
-native bool:SQL_FieldNameToNum(Handle:query, const String:name[], &field);
+native bool SQL_FieldNameToNum(Handle query, const char[] name, &field);
 
 /**
  * Fetches a row from the current result set.  This must be 
@@ -6395,7 +6704,7 @@ native bool:SQL_FieldNameToNum(Handle:query, const String:name[], &field);
  * @return				True if a row was fetched, false otherwise.
  * @error				Invalid query Handle.
  */
-native bool:SQL_FetchRow(Handle:query);
+native bool SQL_FetchRow(Handle query);
 
 /**
  * Returns if there are more rows.
@@ -6404,7 +6713,7 @@ native bool:SQL_FetchRow(Handle:query);
  * @return				True if there are more rows, false otherwise.
  * @error				Invalid query Handle.
  */
-native bool:SQL_MoreRows(Handle:query);
+native bool SQL_MoreRows(Handle query);
 
 /**
  * Rewinds a result set back to the first result.
@@ -6413,7 +6722,7 @@ native bool:SQL_MoreRows(Handle:query);
  * @return				True on success, false otherwise.
  * @error				Invalid query Handle or no current result set.
  */
-native bool:SQL_Rewind(Handle:query);
+native bool SQL_Rewind(Handle query);
 
 /**
  * Fetches a string from a field in the current row of a result set.  
@@ -6430,7 +6739,7 @@ native bool:SQL_Rewind(Handle:query);
  *						type conversion requested from the database,
  *						or no current result set.
  */
-native SQL_FetchString(Handle:query, field, String:buffer[], maxlength, &DBResult:result=DBVal_Error);
+native int SQL_FetchString(Handle query, int field, char[] buffer, int maxlength,  DBResult &result=DBVal_Error);
 
 /**
  * Fetches a float from a field in the current row of a result set.  
@@ -6445,7 +6754,7 @@ native SQL_FetchString(Handle:query, field, String:buffer[], maxlength, &DBResul
  *						type conversion requested from the database,
  *						or no current result set.
  */
-native Float:SQL_FetchFloat(Handle:query, field, &DBResult:result=DBVal_Error);
+native float SQL_FetchFloat(Handle query, int field, DBResult &result=DBVal_Error);
 
 /**
  * Fetches an integer from a field in the current row of a result set.  
@@ -6460,7 +6769,7 @@ native Float:SQL_FetchFloat(Handle:query, field, &DBResult:result=DBVal_Error);
  *						type conversion requested from the database,
  *						or no current result set.
  */
-native SQL_FetchInt(Handle:query, field, &DBResult:result=DBVal_Error);
+native int SQL_FetchInt(Handle query, int field, DBResult &result=DBVal_Error);
 
 /**
  * Returns whether a field's data in the current row of a result set is 
@@ -6472,7 +6781,7 @@ native SQL_FetchInt(Handle:query, field, &DBResult:result=DBVal_Error);
  * @error				Invalid query Handle or field index, or no
  *						current result set.
  */
-native bool:SQL_IsFieldNull(Handle:query, field);
+native bool SQL_IsFieldNull(Handle query, int field);
 
 /**
  * Returns the length of a field's data in the current row of a result
@@ -6486,7 +6795,7 @@ native bool:SQL_IsFieldNull(Handle:query, field);
  * @error				Invalid query Handle or field index or no
  *						current result set.
  */
-native SQL_FetchSize(Handle:query, field);
+native int SQL_FetchSize(Handle query, int field);
 
 /**
  * Binds a parameter in a prepared statement to a given integer value.
@@ -6496,11 +6805,10 @@ native SQL_FetchSize(Handle:query, field);
  * @param number		The number to bind.
  * @param signed		True to bind the number as signed, false to 
  *						bind it as unsigned.
- * @noreturn
  * @error				Invalid statement Handle or parameter index, or
  *						SQL error.
  */
-native SQL_BindParamInt(Handle:statement, param, number, bool:signed=true);
+native void SQL_BindParamInt(Handle statement, int param, int number, bool signed=true);
 
 /**
  * Binds a parameter in a prepared statement to a given float value.
@@ -6508,11 +6816,10 @@ native SQL_BindParamInt(Handle:statement, param, number, bool:signed=true);
  * @param statement		A statement (prepared query) Handle.
  * @param param			The parameter index (starting from 0).
  * @param value			The float number to bind.
- * @noreturn
  * @error				Invalid statement Handle or parameter index, or
  *						SQL error.
  */
-native SQL_BindParamFloat(Handle:statement, param, Float:value);
+native void SQL_BindParamFloat(Handle statement, int param, float value);
 
 /**
  * Binds a parameter in a prepared statement to a given string value.
@@ -6524,11 +6831,10 @@ native SQL_BindParamFloat(Handle:statement, param, Float:value);
  *						locally if necessary.  If the string contents
  *						won't change before calling SQL_Execute(), this
  *						can be set to false for optimization.
- * @noreturn
  * @error				Invalid statement Handle or parameter index, or
  *						SQL error.
  */
-native SQL_BindParamString(Handle:statement, param, const String:value[], bool:copy);
+native void SQL_BindParamString(Handle statement, int param, const char[] value, bool copy);
 
 /**
  * Executes a prepared statement.  All parameters must be bound beforehand.
@@ -6537,7 +6843,7 @@ native SQL_BindParamString(Handle:statement, param, const String:value[], bool:c
  * @return				True on success, false on failure.
  * @error				Invalid statement Handle.
  */
-native bool:SQL_Execute(Handle:statement);
+native bool SQL_Execute(Handle statement);
 
 /**
  * Locks a database so threading operations will not interrupt.
@@ -6554,31 +6860,26 @@ native bool:SQL_Execute(Handle:statement);
  * threaded operation has concluded.
  *
  * @param database		A database Handle.
- * @noreturn
  * @error				Invalid database Handle.
  */
-native SQL_LockDatabase(Handle:database);
+native void SQL_LockDatabase(Handle database);
 
 /**
  * Unlocks a database so threading operations may continue.
  *
  * @param database		A database Handle.
- * @noreturn
  * @error				Invalid database Handle.
  */
-native SQL_UnlockDatabase(Handle:database);
+native void SQL_UnlockDatabase(Handle database);
 
-/**
- * General callback for threaded SQL stuff.
- *
- * @param owner			Parent object of the Handle (or INVALID_HANDLE if none).
- * @param hndl			Handle to the child object (or INVALID_HANDLE if none).
- * @param error			Error string if there was an error.  The error could be 
- *						empty even if an error condition exists, so it is important 
- *						to check the actual Handle value instead.
- * @param data			Data passed in via the original threaded invocation.
- * @noreturn
- */
+// General callback for threaded SQL stuff.
+// 
+// @param owner			Parent object of the Handle (or INVALID_HANDLE if none).
+// @param hndl			Handle to the child object (or INVALID_HANDLE if none).
+// @param error			Error string if there was an error.  The error could be 
+//  					empty even if an error condition exists, so it is important 
+//  					to check the actual Handle value instead.
+// @param data			Data passed in via the original threaded invocation.
 typedef SQLTCallback = function void (Handle owner, Handle hndl, const char[] error, any data);
 
 /**
@@ -6591,7 +6892,7 @@ typedef SQLTCallback = function void (Handle owner, Handle hndl, const char[] er
  *						connection, false otherwise.
  * @error				Invalid Handle.
  */
-native bool:SQL_IsSameConnection(Handle:hndl1, Handle:hndl2);
+native bool SQL_IsSameConnection(Handle hndl1, Handle hndl2);
 
 /**
  * Connects to a database via a thread.  This can be used instead of
@@ -6605,9 +6906,8 @@ native bool:SQL_IsSameConnection(Handle:hndl1, Handle:hndl2);
  *						If no driver was found, the owner is INVALID_HANDLE.
  * @param name			Database name.
  * @param data			Extra data value to pass to the callback.
- * @noreturn
  */
-native SQL_TConnect(SQLTCallback:callback, const String:name[]="default", any:data=0);
+native void SQL_TConnect(SQLTCallback callback, const char[] name="default", any data=0);
 
 /**
  * Executes a simple query via a thread.  The query Handle is passed through
@@ -6626,10 +6926,9 @@ native SQL_TConnect(SQLTCallback:callback, const String:name[]="default", any:da
  * @param query			Query string.
  * @param data			Extra data value to pass to the callback.
  * @param prio			Priority queue to use.
- * @noreturn
  * @error				Invalid database Handle.
  */
-native SQL_TQuery(Handle:database, SQLTCallback:callback, const String:query[], any:data=0, DBPriority:prio=DBPrio_Normal);
+native void SQL_TQuery(Handle database, SQLTCallback callback, const char[] query, any data=0, DBPriority prio=DBPrio_Normal);
 
 /**
  * Creates a new transaction object. A transaction object is a list of queries
@@ -6637,32 +6936,7 @@ native SQL_TQuery(Handle:database, SQLTCallback:callback, const String:query[], 
  *
  * @return              A transaction handle.
  */
-native Transaction:SQL_CreateTransaction();
-
-/**
- * Callback for a successful transaction.
- *
- * @param db            Database handle.
- * @param data          Data value passed to SQL_ExecuteTransaction().
- * @param numQueries    Number of queries executed in the transaction.
- * @param results       An array of Query handle results, one for each of numQueries. They are closed automatically.
- * @param queryData     An array of each data value passed to SQL_AddQuery().
- * @noreturn
- */
-typedef SQLTxnSuccess = function void (Handle db, any data, int numQueries, Handle[] results, any[] queryData);
-
-/**
- * Callback for a failed transaction.
- *
- * @param db            Database handle.
- * @param data          Data value passed to SQL_ExecuteTransaction().
- * @param numQueries    Number of queries executed in the transaction.
- * @param error         Error message.
- * @param failIndex      Index of the query that failed, or -1 if something else.
- * @param queryData     An array of each data value passed to SQL_AddQuery().
- * @noreturn
- */
-typedef SQLTxnFailure = function void (Handle db, any data, int numQueries, const char[] error, int failIndex, any[] queryData);
+native Transaction SQL_CreateTransaction();
 
 /**
  * Adds a query to a transaction object.
@@ -6673,13 +6947,7 @@ typedef SQLTxnFailure = function void (Handle db, any data, int numQueries, cons
  * @return              The index of the query in the transaction's query list.
  * @error               Invalid transaction handle.
  */
-native SQL_AddQuery(Transaction:txn, const String:query[], any:data=0);
-
-methodmap Transaction < Handle
-{
-		public Transaction() = SQL_CreateTransaction;
-		public AddQuery() = SQL_AddQuery;
-};
+native int SQL_AddQuery(Transaction txn, const char[] query, any data=0);
 
 /**
  * Sends a transaction to the database thread. The transaction handle is
@@ -6696,11 +6964,11 @@ methodmap Transaction < Handle
  * @error               An invalid handle.
  */
 native SQL_ExecuteTransaction(
-		Handle:db,
+		Handle db,
 		Transaction:txn,
 		SQLTxnSuccess:onSuccess = INVALID_FUNCTION,
 		SQLTxnFailure:onError = INVALID_FUNCTION,
-		any:data=0,
+		any data=0,
 		DBPriority:priority=DBPrio_Normal);
 /**
  * vim: set ts=4 :
@@ -7997,9 +8265,9 @@ stock GetClientButtons(client)
 	return GetEntProp(client, Prop_Data, datamap);
 }
 /**
- * vim: set ts=4 :
+ * vim: set ts=4 sw=4 tw=99 noet :
  * =============================================================================
- * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
+ * SourceMod (C)2004-2014 AlliedModders LLC.  All rights reserved.
  * =============================================================================
  *
  * This file is part of the SourceMod/SourcePawn SDK.
@@ -8038,9 +8306,9 @@ stock GetClientButtons(client)
  */
 enum EventHookMode
 {
-	EventHookMode_Pre,					/**< Hook callback fired before event is fired */
-	EventHookMode_Post,					/**< Hook callback fired after event is fired */
-	EventHookMode_PostNoCopy			/**< Hook callback fired after event is fired, but event data won't be copied */
+	EventHookMode_Pre,					//< Hook callback fired before event is fired */
+	EventHookMode_Post,					//< Hook callback fired after event is fired */
+	EventHookMode_PostNoCopy			//< Hook callback fired after event is fired, but event data won't be copied */
 };
 
 /**
@@ -8048,27 +8316,112 @@ enum EventHookMode
  */
 typeset EventHook
 {
-	/**
-	 * Called when a game event is fired.
-	 *
-	 * @param event			Handle to event. This could be INVALID_HANDLE if every plugin hooking 
-	 *						this event has set the hook mode EventHookMode_PostNoCopy.
-	 * @param name			String containing the name of the event.
-	 * @param dontBroadcast	True if event was not broadcast to clients, false otherwise.
-	 * @return				Ignored for post hooks. Plugin_Handled will block event if hooked as pre.
-	 */
+	// Called when a game event is fired.
+	//
+	// @param event			Handle to event. This could be INVALID_HANDLE if every plugin hooking 
+	//						this event has set the hook mode EventHookMode_PostNoCopy.
+	// @param name			String containing the name of the event.
+	// @param dontBroadcast	True if event was not broadcast to clients, false otherwise.
+	// @return				Ignored for post hooks. Plugin_Handled will block event if hooked as pre.
+	///
 	function Action (Event event, const char[] name, bool dontBroadcast);
-	/**
-	 * Called when a game event is fired.
-	 *
-	 * @param event			Handle to event. This could be INVALID_HANDLE if every plugin hooking 
-	 *						this event has set the hook mode EventHookMode_PostNoCopy.
-	 * @param name			String containing the name of the event.
-	 * @param dontBroadcast	True if event was not broadcast to clients, false otherwise.
-	 * @noreturn
-	 */
+	//
+	// Called when a game event is fired.
+	//
+	// @param event			Handle to event. This could be INVALID_HANDLE if every plugin hooking 
+	//						this event has set the hook mode EventHookMode_PostNoCopy.
+	// @param name			String containing the name of the event.
+	// @param dontBroadcast	True if event was not broadcast to clients, false otherwise.
+	// @noreturn
+	///
 	function void (Event event, const char[] name, bool dontBroadcast);
 };
+
+methodmap Event < Handle
+{
+	// Fires a game event.
+	//
+	// This function closes the event Handle after completing.
+	//
+	// @param dontBroadcast Optional boolean that determines if event should be broadcast to clients.
+	public native void Fire(bool dontBroadcast=false);
+
+	// Cancels a previously created game event that has not been fired. This
+	// is necessary to avoid leaking memory when an event isn't fired.
+	public native void Cancel();
+
+	// Returns the boolean value of a game event's key.
+	//
+	// @param key          Name of event key.
+	// @param defValue     Optional default value to use if the key is not found.
+	// @return             The boolean value of the specfied event key.
+	public native bool GetBool(const char[] key, bool defValue=false);
+
+	// Sets the boolean value of a game event's key.
+	//
+	// @param key          Name of event key.
+	// @param value        New boolean value.
+	public native void SetBool(const char[] key, bool value);
+
+	// Returns the integer value of a game event's key.
+	//
+	// @param key          Name of event key.
+	// @param defValue     Optional default value to use if the key is not found.
+	// @return             The integer value of the specfied event key.
+	public native int GetInt(const char[] key, int defValue=0);
+
+	// Sets the integer value of a game event's key.
+	//
+	// Integer value refers to anything that can be reduced to an integer.
+	// The various size specifiers, such as "byte" and "short" are still 
+	// integers, and only refer to how much data will actually be sent 
+	// over the network (if applicable).
+	//
+	// @param key          Name of event key.
+	// @param value        New integer value.
+	public native void SetInt(const char[] key, int value);
+
+	// Returns the floating point value of a game event's key.
+	//
+	// @param key          Name of event key.
+	// @param defValue     Optional default value to use if the key is not found.
+	// @return             The floating point value of the specfied event key.
+	public native float GetFloat(const char[] key, float defValue=0.0);
+
+	// Sets the floating point value of a game event's key.
+	//
+	// @param key          Name of event key.
+	// @param value        New floating point value.
+	public native void SetFloat(const char[] key, float value);
+
+	// Retrieves the string value of a game event's key.
+	//
+	// @param key          Name of event key.
+	// @param value        Buffer to store the value of the specified event key.
+	// @param maxlength    Maximum length of string buffer.
+	// @param defValue     Optional default value to use if the key is not found.
+	public native void GetString(const char[] key, char[] value, int maxlength, const char[] defvalue="");
+
+	// Sets the string value of a game event's key.
+	//
+	// @param key          Name of event key.
+	// @param value        New string value.
+	public native void SetString(const char[] key, const char[] value);
+
+	// Retrieves the name of a game event.
+	//
+	// @param name         Buffer to store the name of the event.
+	// @param maxlength    Maximum length of string buffer.
+	public native void GetName(char[] name, int maxlength);
+
+	// Sets whether an event's broadcasting will be disabled or not.
+	//
+	// This has no effect on events Handles that are not from HookEvent
+	// or HookEventEx callbacks.
+	property bool BroadcastDisabled {
+		public native set(bool dontBroadcast);
+	}
+}
 
 /**
  * Creates a hook for when a game event is fired.
@@ -8107,7 +8460,7 @@ native void UnhookEvent(const char[] name, EventHook callback, EventHookMode mod
  * Creates a game event to be fired later.
  *
  * The Handle should not be closed via CloseHandle().  It must be closed via 
- * FireEvent() or CancelCreatedEvent().
+ * event.Fire() or event.Cancel().
  *
  * @param name			Name of event.
  * @param force			If set to true, this forces the event to be created even if it's not being hooked.
@@ -8256,22 +8609,6 @@ native void GetEventName(Handle event, char[] name, int maxlength);
  * @error               Invalid Handle.
  */
 native void SetEventBroadcast(Handle event, bool dontBroadcast);
-
-methodmap Event < Handle {
-	public Event() = CreateEvent;
-	public Fire() = FireEvent;
-	public Cancel() = CancelCreatedEvent;
-	public GetBool() = GetEventBool;
-	public SetBool() = SetEventBool;
-	public GetInt() = GetEventInt;
-	public SetInt() = SetEventInt;
-	public GetFloat() = GetEventFloat;
-	public SetFloat() = SetEventFloat;
-	public GetString() = GetEventString;
-	public SetString() = SetEventString;
-	public GetName() = GetEventName;
-	public SetBroadcast() = SetEventBroadcast;
-}
 /**
  * vim: set ts=4 sw=4 tw=99 noet :
  * =============================================================================
@@ -10580,6 +10917,24 @@ native EntRefToEntIndex(ref);
  */
 native MakeCompatEntRef(ref);
 
+
+enum ClientRangeType
+{
+	RangeType_Visibility = 0,
+	RangeType_Audibility,
+}
+
+/**
+ * Find clients that are potentially in range of a position.
+ *
+ * @param origin		Coordinates from which to test range.
+ * @param rangeType		Range type to use for filtering clients.
+ * @param clients		Array to which found client indexes will be written.
+ * @param size			Maximum size of clients array.
+ * @return				Number of client indexes written to clients array.
+ */
+native int GetClientsInRange(float origin[3], ClientRangeType rangeType, int[] clients, int size);
+
 /**
  * vim: set ts=4 :
  * =============================================================================
@@ -12206,6 +12561,294 @@ enum MenuSource
  */
 typedef MenuHandler = function int (Menu menu, MenuAction action, int param1, int param2);
 
+// Panels are used for drawing raw menus without any extra helper functions.
+// Handles must be closed via delete or CloseHandle().
+methodmap Panel < Handle
+{
+	// Constructor for a new Panel.
+	// 
+	// @param hStyle		MenuStyle Handle, or null to use the default style.
+	public native Panel(Handle hStyle = null);
+
+	// Sets the panel's title.
+	//
+	// @param text          Text to set as the title.
+	// @param onlyIfEmpty   If true, the title will only be set if no title is set.
+	public native void SetTitle(const char[] text, bool onlyIfEmpty=false);
+
+	// Draws an item on a panel.  If the item takes up a slot, the position
+	// is returned.
+	//
+	// @param text          Display text to use.  If not a raw line, 
+	//                      the style may automatically add color markup.
+	//                      No numbering or newlines are needed.
+	// @param style         ITEMDRAW style flags.
+	// @return              A slot position, or 0 if item was a rawline or could not be drawn.
+	public native void DrawItem(const char[] text, style=ITEMDRAW_DEFAULT);
+
+	// Draws a raw line of text on a panel, without any markup other than a
+	// newline.
+	//
+	// @param text          Display text to use.
+	// @return              True on success, false if raw lines are not supported.
+	public native bool DrawText(const char[] text);
+
+	// Returns whether or not the given drawing flags are supported by
+	// the menu style.
+	//
+	// @param style         ITEMDRAW style flags.
+	// @return              True if item is drawable, false otherwise.
+	public native bool CanDrawFlags(int style);
+
+	// Sets the selectable key map of a panel.  This is not supported by
+	// all styles (only by Radio, as of this writing).  
+	//
+	// @param keys          An integer where each bit N allows key
+	//                      N+1 to be selected.  If no keys are selectable,
+	//                      then key 0 (bit 9) is automatically set.
+	// @return              True if supported, false otherwise.
+	public native bool SetKeys(int keys);
+
+	// Sends a panel to a client.  Unlike full menus, the handler
+	// function will only receive the following actions, both of 
+	// which will have null for a menu, and the client as param1.
+	//
+	// MenuAction_Select (param2 will be the key pressed)
+	// MenuAction_Cancel (param2 will be the reason)
+	//
+	// Also, if the menu fails to display, no callbacks will be called.
+	//
+	// @param client        A client to draw to.
+	// @param handler       The MenuHandler function to catch actions with.
+	// @param time          Time to hold the menu for.
+	// @return              True on success, false on failure.
+	public native bool Send(int client, MenuHandler handler, int time);
+
+	// Returns the amount of text the menu can still hold.  If this is 
+	// limit is reached or overflowed, the text is silently truncated.  
+	//
+	// Radio menus: Currently 511 characters (512 bytes).
+	// Valve menus: Currently -1 (no meaning).
+	property int TextRemaining {
+		public native get();
+	}
+
+	// Returns or sets the current key position, starting at 1. This cannot be
+	// used to traverse backwards.
+	property int CurrentKey {
+		public native get();
+		public native set(int key);
+	}
+
+	// Returns the panel's style. Style handles are global and cannot be closed.
+	property Handle Style {
+		public native get();
+	}
+};
+
+// A menu is a helper object for managing in-game menus.
+methodmap Menu < Handle
+{
+	// Creates a new, empty menu using the default style.
+	// 
+	// @param handler       Function which will receive menu actions.
+	// @param actions       Optionally set which actions to receive.  Select, 
+	//                      Cancel, and End will always be received regardless
+	//                      of whether they are set or not.  They are also
+	//                      the only default actions.
+	public native Menu(MenuHandler handler, MenuAction actions=MENU_ACTIONS_DEFAULT);
+
+	// Displays a menu to a client.
+	//
+	// @param client        Client index.
+	// @param time          Maximum time to leave menu on the screen.
+	// @return              True on success, false on failure.
+	// @error               Client not in game.
+	public native bool Display(int client, int time);
+
+	// Displays a menu to a client, starting from the given item.
+	//
+	// @param client        Client index.
+	// @param first_item    First item to begin drawing from.
+	// @param time          Maximum time to leave menu on the screen.
+	// @return              True on success, false on failure.
+	// @error               Client not in game.
+	///
+	public native bool DisplayAt(int client, int first_item, int time);
+
+	// Appends a new item to the end of a menu.
+	//
+	// @param info          Item information string.
+	// @param display       Default item display string.
+	// @param style         Drawing style flags.  Anything other than DEFAULT or 
+	//                      DISABLED will be completely ignored when paginating.
+	// @return              True on success, false on failure.
+	// @error               Item limit reached.
+	public native bool AddItem(const char[] info, const char[] display, int style=ITEMDRAW_DEFAULT);
+
+	// Inserts an item into the menu before a certain position; the new item will
+	// be at the given position and all next items pushed forward.
+	//
+	// @param position      Position, starting from 0.
+	// @param info          Item information string.
+	// @param display       Default item display string.
+	// @param style         Drawing style flags.  Anything other than DEFAULT or 
+	//                      DISABLED will be completely ignored when paginating.
+	// @return              True on success, false on failure.
+	// @error               Invalid menu position.
+	public native bool InsertItem(int position, const char[] info,
+	                              const char[] display, int style=ITEMDRAW_DEFAULT);
+
+	// Removes an item from the menu.
+	//
+	// @param position      Position, starting from 0.
+	// @return              True on success, false on failure.
+	// @error               Invalid menu position.
+	public native bool RemoveItem(int position);
+
+	// Removes all items from a menu.
+	public native void RemoveAllItems();
+
+	// Retrieves information about a menu item.
+	//
+	// @param position      Position, starting from 0.
+	// @param infoBuf       Info buffer.
+	// @param infoBufLen    Maximum length of the info buffer.
+	// @param style         By-reference variable to store drawing flags.
+	// @param dispBuf       Display buffer.
+	// @param dispBufLen    Maximum length of the display buffer.
+	// @return              True on success, false if position is invalid.
+	public native bool GetItem(int position, char[] infoBuf, int infoBufLen, 
+							   int &style=0, char[] dispBuf="", int dispBufLen=0);
+
+	// Sets the menu's default title/instruction message.
+	//
+	// @param fmt           Message string format
+	// @param ...           Message string arguments.
+	public native void SetTitle(const char[] fmt, any ...);
+
+	// Returns the text of a menu's title.
+	//
+	// @param menu          Menu Handle.
+	// @param buffer        Buffer to store title.
+	// @param maxlength     Maximum length of the buffer.
+	// @return              Number of bytes written.
+	public native void GetTitle(char[] buffer, int maxlength);
+
+	// Creates a raw MenuPanel based off the menu's style.
+	// The Handle must be freed with CloseHandle().
+	//
+	// @param menu          Menu Handle.
+	// @return              A new MenuPanel Handle.
+	public native Panel ToPanel();
+
+	// Cancels a menu from displaying on all clients.  While the
+	// cancellation is in progress, this menu cannot be re-displayed
+	// to any clients.
+	//
+	// The menu may still exist on the client's screen after this command.
+	// This simply verifies that the menu is not being used anywhere.
+	//
+	// If any vote is in progress on a menu, it will be cancelled.
+	public native void Cancel();
+
+	// Broadcasts a menu to a list of clients.  The most selected item will be 
+	// returned through MenuAction_End.  On a tie, a random item will be returned 
+	// from a list of the tied items.
+	//
+	// Note that MenuAction_VoteEnd and MenuAction_VoteStart are both
+	// default callbacks and do not need to be enabled.
+	//
+	// @param clients       Array of clients to broadcast to.
+	// @param numClients    Number of clients in the array.
+	// @param time          Maximum time to leave menu on the screen.
+	// @param flags         Optional voting flags.
+	// @return              True on success, false if this menu already has a
+	//                      vote session in progress.
+	// @error               A vote is already in progress.
+	public native bool DisplayVote(int[] clients, int numClients, int time, int flags=0);
+
+	// Sends a vote menu to all clients.  See VoteMenu() for more information.
+	//
+	// @param time          Maximum time to leave menu on the screen.
+	// @param flags         Optional voting flags.
+	// @return              True on success, false if this menu already has a
+	//                      vote session in progress.
+	public bool DisplayVoteToAll(int time, int flags=0) {
+		int total = 0;
+		int[] players = new int[MaxClients];
+		for (int i = 1; i <= MaxClients; i++) {
+			if (!IsClientInGame(i) || IsFakeClient(i))
+				continue;
+			players[total++] = i;
+		}
+		return this.DisplayVote(players, total, time, flags);
+	}
+
+	// Get or set the menu's pagination.
+	//  
+	// If pgination is MENU_NO_PAGINATION, and the exit button flag is set, 
+	// then the exit button flag is removed. It can be re-applied if desired.
+	property int Pagination {
+		public native get();
+		public native set(int value);
+	}
+
+	// Get or set the menu's option flags.
+	//
+	// If a certain bit is not supported, it will be stripped before being set.
+	property int OptionFlags {
+		public native get();
+		public native set(int value);
+	}
+
+	// Returns whether or not the menu has an exit button. By default, menus
+	// have an exit button.
+	property bool ExitButton {
+		public native get();
+		public native set(bool value);
+	}
+
+	// Controls whether or not the menu has an "exit back" button. By default, 
+	// menus do not have an exit back button.  
+	// 
+	// Exit Back buttons appear as "Back" on page 1 of paginated menus and have 
+	// functionality defined by the user in MenuEnd_ExitBack.
+	property bool ExitBackButton {
+		public native get();
+		public native set(bool value);
+	}
+
+	// Sets whether or not the menu has a "no vote" button in slot 1.
+	// By default, menus do not have a no vote button.
+	property bool NoVoteButton {
+		public native set(bool value);
+	}
+
+	// Sets an advanced vote handling callback. If this callback is set,
+	// MenuAction_VoteEnd will not be called.
+	property VoteHandler VoteResultCallback {
+		public native set(VoteHandler handler);
+	}
+
+	// Returns the number of items in a menu.
+	property int ItemCount {
+		public native get();
+	}
+
+	// Returns the menu style. The Handle is global and cannot be closed.
+	property Handle Style {
+		public native get();
+	}
+
+	// Returns the first item on the page of a currently selected menu.
+	// 
+	// This is only valid inside a MenuAction_Select callback.
+	property int Selection {
+		public native get();
+	}
+}
+
 /**
  * Creates a new, empty menu using the default style.
  * 
@@ -12216,7 +12859,7 @@ typedef MenuHandler = function int (Menu menu, MenuAction action, int param1, in
  *							the only default actions.
  * @return					A new menu Handle.
  */
-native Menu:CreateMenu(MenuHandler:handler, MenuAction:actions=MENU_ACTIONS_DEFAULT);
+native Menu CreateMenu(MenuHandler handler, MenuAction actions=MENU_ACTIONS_DEFAULT);
 
 /**
  * Displays a menu to a client.
@@ -12227,7 +12870,7 @@ native Menu:CreateMenu(MenuHandler:handler, MenuAction:actions=MENU_ACTIONS_DEFA
  * @return					True on success, false on failure.
  * @error					Invalid Handle or client not in game.
  */
-native bool:DisplayMenu(Handle:menu, client, time);
+native bool DisplayMenu(Handle menu, int client, int time);
 
 /**
  * Displays a menu to a client, starting from the given item.
@@ -12239,7 +12882,7 @@ native bool:DisplayMenu(Handle:menu, client, time);
  * @return					True on success, false on failure.
  * @error					Invalid Handle or client not in game.
  */
-native bool:DisplayMenuAtItem(Handle:menu, client, first_item, time);
+native bool DisplayMenuAtItem(Handle menu, int client, int first_item, int time);
 
 /**
  * Appends a new item to the end of a menu.
@@ -12252,10 +12895,10 @@ native bool:DisplayMenuAtItem(Handle:menu, client, first_item, time);
  * @return					True on success, false on failure.
  * @error					Invalid Handle or item limit reached.
  */
-native AddMenuItem(Handle:menu, 
-					const String:info[], 
-					const String:display[], 
-					style=ITEMDRAW_DEFAULT);
+native bool AddMenuItem(Handle menu, 
+						const char[] info, 
+						const char[] display, 
+						int style=ITEMDRAW_DEFAULT);
 
 /**
  * Inserts an item into the menu before a certain position; the new item will
@@ -12270,11 +12913,11 @@ native AddMenuItem(Handle:menu,
  * @return					True on success, false on failure.
  * @error					Invalid Handle or menu position.
  */
-native bool:InsertMenuItem(Handle:menu,
+native bool InsertMenuItem(Handle menu,
 						position, 
-						const String:info[], 
-						const String:display[], 
-						style=ITEMDRAW_DEFAULT);
+						const char[] info, 
+						const char[] display, 
+						int style=ITEMDRAW_DEFAULT);
 
 /**
  * Removes an item from the menu.
@@ -12284,16 +12927,15 @@ native bool:InsertMenuItem(Handle:menu,
  * @return					True on success, false on failure.
  * @error					Invalid Handle or menu position.
  */
-native bool:RemoveMenuItem(Handle:menu, position);
+native bool RemoveMenuItem(Handle menu, int position);
 
 /**
  * Removes all items from a menu.
  *
  * @param menu				Menu Handle.
- * @noreturn
  * @error					Invalid Handle or menu position.
  */
-native RemoveAllMenuItems(Handle:menu);
+native void RemoveAllMenuItems(Handle menu);
 
 /**
  * Retrieves information about a menu item.
@@ -12308,13 +12950,13 @@ native RemoveAllMenuItems(Handle:menu);
  * @return					True on success, false if position is invalid.
  * @error					Invalid Handle.
  */
-native bool:GetMenuItem(Handle:menu, 
-						position, 
-						String:infoBuf[], 
-						infoBufLen, 
-						&style=0, 
-						String:dispBuf[]="",
-						dispBufLen=0);
+native bool GetMenuItem(Handle menu, 
+						int position, 
+						char[] infoBuf, 
+						int infoBufLen, 
+						int &style=0, 
+						char[] dispBuf="",
+						int dispBufLen=0);
 						
 /**
  * Returns the first item on the page of a currently selected menu.
@@ -12327,7 +12969,7 @@ native bool:GetMenuItem(Handle:menu,
  *							position.
  * @error					Not called from inside a MenuAction_Select callback.
  */
-native GetMenuSelectionPosition();
+native int GetMenuSelectionPosition();
 
 /**
  * Returns the number of items in a menu.
@@ -12336,7 +12978,7 @@ native GetMenuSelectionPosition();
  * @return					Number of items in the menu.
  * @error					Invalid Handle.
  */
-native GetMenuItemCount(Handle:menu);
+native int GetMenuItemCount(Handle menu);
 
 /**
  * Sets whether the menu should be paginated or not.
@@ -12350,7 +12992,7 @@ native GetMenuItemCount(Handle:menu);
  *							low.
  * @error					Invalid Handle.
  */
-native bool:SetMenuPagination(Handle:menu, itemsPerPage);
+native bool SetMenuPagination(Handle menu, int itemsPerPage);
 
 /**
  * Returns a menu's pagination setting.
@@ -12359,7 +13001,7 @@ native bool:SetMenuPagination(Handle:menu, itemsPerPage);
  * @return					Pagination setting.
  * @error					Invalid Handle.
  */
-native GetMenuPagination(Handle:menu);
+native int GetMenuPagination(Handle menu);
 
 /**
  * Returns a menu's MenuStyle Handle.  The Handle
@@ -12369,7 +13011,7 @@ native GetMenuPagination(Handle:menu);
  * @return 					Handle to the menu's draw style.
  * @error					Invalid Handle.
  */
-native Handle:GetMenuStyle(Handle:menu);
+native Handle GetMenuStyle(Handle menu);
 
 /**
  * Sets the menu's default title/instruction message.
@@ -12377,10 +13019,9 @@ native Handle:GetMenuStyle(Handle:menu);
  * @param menu				Menu Handle.
  * @param fmt				Message string format
  * @param ...				Message string arguments.
- * @noreturn
  * @error					Invalid Handle.
  */
-native SetMenuTitle(Handle:menu, const String:fmt[], any:...);
+native void SetMenuTitle(Handle menu, const char[] fmt, any ...);
 
 /**
  * Returns the text of a menu's title.
@@ -12391,7 +13032,7 @@ native SetMenuTitle(Handle:menu, const String:fmt[], any:...);
  * @return					Number of bytes written.
  * @error					Invalid Handle/
  */
-native GetMenuTitle(Handle:menu, String:buffer[], maxlength);
+native int GetMenuTitle(Handle menu, char[] buffer, int maxlength);
 
 /**
  * Creates a raw MenuPanel based off the menu's style.
@@ -12401,7 +13042,7 @@ native GetMenuTitle(Handle:menu, String:buffer[], maxlength);
  * @return					A new MenuPanel Handle.
  * @error					Invalid Handle.
  */
-native Handle:CreatePanelFromMenu(Handle:menu);
+native Panel CreatePanelFromMenu(Handle menu);
 
 /**
  * Returns whether or not the menu has an exit button.
@@ -12411,7 +13052,7 @@ native Handle:CreatePanelFromMenu(Handle:menu);
  * @return 					True if the menu has an exit button; false otherwise.
  * @error					Invalid Handle.
  */
-native bool:GetMenuExitButton(Handle:menu);
+native bool GetMenuExitButton(Handle menu);
 
 /**
  * Sets whether or not the menu has an exit button.  By default, paginated menus 
@@ -12429,7 +13070,7 @@ native bool:GetMenuExitButton(Handle:menu);
  * @return 					True if allowed; false on failure.
  * @error					Invalid Handle.
  */
-native bool:SetMenuExitButton(Handle:menu, bool:button);
+native bool SetMenuExitButton(Handle menu, bool button);
 
 /**
  * Returns whether or not the menu has an "exit back" button.  By default, 
@@ -12442,7 +13083,7 @@ native bool:SetMenuExitButton(Handle:menu, bool:button);
  * @return 					True if the menu has an exit back button; false otherwise.
  * @error					Invalid Handle.
  */
-native bool:GetMenuExitBackButton(Handle:menu);
+native bool GetMenuExitBackButton(Handle menu);
 
 /**
  * Sets whether or not the menu has an "exit back" button. By default, menus 
@@ -12455,7 +13096,7 @@ native bool:GetMenuExitBackButton(Handle:menu);
  * @param button			True to enable the button, false to remove it.
  * @error					Invalid Handle.
  */
-native SetMenuExitBackButton(Handle:menu, bool:button);
+native void SetMenuExitBackButton(Handle menu, bool button);
 
 /**
  * Sets whether or not the menu has a "no vote" button in slot 1.
@@ -12466,7 +13107,7 @@ native SetMenuExitBackButton(Handle:menu, bool:button);
  * @return 					True if allowed; false on failure.
  * @error					Invalid Handle.
  */
-native bool:SetMenuNoVoteButton(Handle:menu, bool:button);
+native bool SetMenuNoVoteButton(Handle menu, bool button);
 
 /**
  * Cancels a menu from displaying on all clients.  While the
@@ -12479,10 +13120,9 @@ native bool:SetMenuNoVoteButton(Handle:menu, bool:button);
  * If any vote is in progress on a menu, it will be cancelled.
  *
  * @param menu				Menu Handle.
- * @noreturn
  * @error					Invalid Handle.
  */
-native CancelMenu(Handle:menu);
+native void CancelMenu(Handle menu);
 
 /**
  * Retrieves a menu's option flags.
@@ -12491,7 +13131,7 @@ native CancelMenu(Handle:menu);
  * @return					A bitstring of MENUFLAG bits.
  * @error					Invalid Handle.
  */
-native GetMenuOptionFlags(Handle:menu);
+native int GetMenuOptionFlags(Handle menu);
 
 /**
  * Sets a menu's option flags.
@@ -12502,10 +13142,9 @@ native GetMenuOptionFlags(Handle:menu);
  *
  * @param menu				Menu Handle.
  * @param flags				A new bitstring of MENUFLAG bits.
- * @noreturn
  * @error					Invalid Handle.
  */
-native void SetMenuOptionFlags(Handle:menu, flags);
+native void SetMenuOptionFlags(Handle menu, int flags);
 
 /**
  * Returns whether a vote is in progress.
@@ -12513,15 +13152,14 @@ native void SetMenuOptionFlags(Handle:menu, flags);
  * @param menu				Deprecated; no longer used.
  * @return					True if a vote is in progress, false otherwise.
  */
-native bool:IsVoteInProgress(Handle:menu=INVALID_HANDLE);
+native bool IsVoteInProgress(Handle menu=INVALID_HANDLE);
 
 /**
  * Cancels the vote in progress.
  *
- * @noreturn
  * @error					If no vote is in progress.
  */
-native CancelVote();
+native void CancelVote();
 
 /**
  * Broadcasts a menu to a list of clients.  The most selected item will be 
@@ -12540,7 +13178,7 @@ native CancelVote();
  *							in progress.
  * @error					Invalid Handle, or a vote is already in progress.
  */
-native bool:VoteMenu(Handle:menu, clients[], numClients, time, flags=0);
+native bool VoteMenu(Handle menu, int[] clients, int numClients, int time, int flags=0);
 
 /**
  * Sends a vote menu to all clients.  See VoteMenu() for more information.
@@ -12552,7 +13190,7 @@ native bool:VoteMenu(Handle:menu, clients[], numClients, time, flags=0);
  *							in progress.
  * @error					Invalid Handle.
  */
-stock bool:VoteMenuToAll(Handle:menu, time, flags=0)
+stock bool VoteMenuToAll(Handle menu, int time, int flags=0)
 {
 	new total;
 	decl players[MaxClients];
@@ -12568,6 +13206,7 @@ stock bool:VoteMenuToAll(Handle:menu, time, flags=0)
 	
 	return VoteMenu(menu, players, total, time, flags);
 }
+
 /**
  * Callback for when a vote has ended and results are available.
  *
@@ -12578,16 +13217,29 @@ stock bool:VoteMenuToAll(Handle:menu, time, flags=0)
  * @param num_items			Number of unique items that were selected.
  * @param item_info			Array of items, sorted by count.  Use VOTEINFO_ITEM
  *							defines.
- * @noreturn
  */
-typedef VoteHandler = function void (
-  Menu menu,
-  int num_votes, 
-  int num_clients,
-  const int client_info[][2], 
-  int num_items,
-  const int item_info[][2]
-);
+typeset VoteHandler
+{
+	// old style
+	function void(
+		Menu menu,
+		int num_votes,
+		int num_clients,
+		const int client_info[][2],
+		int num_items,
+		const int item_info[][2]
+	);
+
+	// new style
+	function void(
+		Menu menu,
+		int num_votes,
+		int num_clients,
+		const int[][] client_info,
+		int num_items,
+		const int[][] item_info
+	);
+};
 
 /**
  * Sets an advanced vote handling callback.  If this callback is set,
@@ -12595,65 +13247,9 @@ typedef VoteHandler = function void (
  *
  * @param menu				Menu Handle.
  * @param callback			Callback function.
- * @noreturn
  * @error					Invalid Handle or callback.
  */
-native SetVoteResultCallback(Handle:menu, VoteHandler:callback);
-
-methodmap Menu < Handle {
-	public Menu() = CreateMenu;
-	public Display() = DisplayMenu;
-	public DisplayAt() = DisplayMenuAtItem;
-	public AddItem() = AddMenuItem;
-	public InsertItem() = InsertMenuItem;
-	public RemoveItem() = RemoveMenuItem;
-	public RemoveAllItems() = RemoveAllMenuItems;
-	public GetItem() = GetMenuItem;
-	public GetTitle() = GetMenuTitle;
-	public SetTitle() = SetMenuTitle;
-	public ToPanel() = CreatePanelFromMenu;
-	public Cancel() = CancelMenu;
-	public DisplayVote() = VoteMenu;
-	public DisplayVoteToAll() = VoteMenuToAll;
-
-	property int Pagination {
-		public get() = GetMenuPagination;
-		public set(int value) {
-			SetMenuPagination(this, value);
-		}
-	}
-	property int OptionFlags {
-		public get() = GetMenuOptionFlags;
-		public set() = SetMenuOptionFlags;
-	}
-	property bool ExitButton {
-		public get() = GetMenuExitButton;
-		public set(bool value) {
-			SetMenuExitButton(this, value);
-		}
-	}
-	property bool ExitBackButton {
-		public get() = GetMenuExitBackButton;
-		public set(bool value) {
-			SetMenuExitBackButton(this, value);
-		}
-	}
-
-	public SetNoVoteButton() = SetMenuNoVoteButton;
-	public SetVoteResultCallback() = SetVoteResultCallback;
-
-	property int ItemCount {
-		public get() = GetMenuItemCount;
-	}
-	property Handle Style {
-		public get() = GetMenuStyle;
-	}
-	property int SelectionPosition {
-		public get() {
-			return GetMenuSelectionPosition();
-		}
-	}
-}
+native void SetVoteResultCallback(Handle menu, VoteHandler callback);
 
 /**
  * Returns the number of seconds you should "wait" before displaying
@@ -12662,7 +13258,7 @@ methodmap Menu < Handle {
  *
  * @return					Number of seconds to wait, or 0 for none.
  */
-native CheckVoteDelay();
+native int CheckVoteDelay();
 
 /**
  * Returns whether a client is in the pool of clients allowed 
@@ -12673,7 +13269,7 @@ native CheckVoteDelay();
  * @return					True if client is allowed to vote, false otherwise.
  * @error					If no vote is in progress or client index is invalid.
  */
-native bool:IsClientInVotePool(client);
+native bool IsClientInVotePool(int client);
 
 /**
  * Redraws the current vote menu to a client in the voting pool.
@@ -12682,10 +13278,10 @@ native bool:IsClientInVotePool(client);
  * @param revotes			True to allow revotes, false otherwise.
  * @return					True on success, false if the client is in the vote pool 
  *							but cannot vote again.
- * @error					No vote in progress, client is not in the voting pool, 
+ * @error					No vote in progress, int client is not in the voting pool, 
  *							or client index is invalid.
  */
-native bool:RedrawClientVoteMenu(client, bool:revotes=true);
+native bool RedrawClientVoteMenu(int client, bool revotes=true);
 
 /**
  * Returns a style's global Handle.
@@ -12693,7 +13289,7 @@ native bool:RedrawClientVoteMenu(client, bool:revotes=true);
  * @param style			Menu Style.
  * @return				A Handle, or INVALID_HANDLE if not found or unusable.
  */
-native Handle:GetMenuStyleHandle(MenuStyle:style);
+native Handle GetMenuStyleHandle(MenuStyle style);
 
 /**
  * Creates a MenuPanel from a MenuStyle.  Panels are used for drawing raw 
@@ -12704,7 +13300,7 @@ native Handle:GetMenuStyleHandle(MenuStyle:style);
  * @return				A new MenuPanel Handle.
  * @error				Invalid Handle other than INVALID_HANDLE.
  */
-native Handle:CreatePanel(Handle:hStyle=INVALID_HANDLE);
+native Panel CreatePanel(Handle hStyle=INVALID_HANDLE);
 
 /** 
  * Creates a Menu from a MenuStyle.  The Handle must be closed with 
@@ -12719,7 +13315,7 @@ native Handle:CreatePanel(Handle:hStyle=INVALID_HANDLE);
  * @return				A new menu Handle.
  * @error				Invalid Handle other than INVALID_HANDLE.
  */
-native Handle:CreateMenuEx(Handle:hStyle=INVALID_HANDLE, MenuHandler:handler, MenuAction:actions=MENU_ACTIONS_DEFAULT);
+native Menu CreateMenuEx(Handle hStyle=INVALID_HANDLE, MenuHandler handler, MenuAction actions=MENU_ACTIONS_DEFAULT);
 
 /**
  * Returns whether a client is viewing a menu.
@@ -12727,9 +13323,9 @@ native Handle:CreateMenuEx(Handle:hStyle=INVALID_HANDLE, MenuHandler:handler, Me
  * @param client		Client index.
  * @param hStyle		MenuStyle Handle, or INVALID_HANDLE to use the default style.
  * @return				A MenuSource value.
- * @error				Invalid Handle other than INVALID_HANDLE.
+ * @error				Invalid Handle other than null.
  */
-native MenuSource:GetClientMenu(client, Handle:hStyle=INVALID_HANDLE);
+native MenuSource GetClientMenu(int client, Handle hStyle=null);
 
 /** 
  * Cancels a menu on a client.  This will only affect non-external menus.
@@ -12740,7 +13336,7 @@ native MenuSource:GetClientMenu(client, Handle:hStyle=INVALID_HANDLE);
  *						the cancellation process.
  * @return				True if a menu was cancelled, false otherwise.
  */
-native bool:CancelClientMenu(client, bool:autoIgnore=false, Handle:hStyle=INVALID_HANDLE);
+native bool CancelClientMenu(int client, bool autoIgnore=false, Handle hStyle=INVALID_HANDLE);
 
 /**
  * Returns a style's maximum items per page.
@@ -12749,7 +13345,7 @@ native bool:CancelClientMenu(client, bool:autoIgnore=false, Handle:hStyle=INVALI
  * @return				Maximum items per page.
  * @error				Invalid Handle other than INVALID_HANDLE.
  */
-native GetMaxPageItems(Handle:hStyle=INVALID_HANDLE);
+native int GetMaxPageItems(Handle hStyle=INVALID_HANDLE);
 
 /**
  * Returns a MenuPanel's parent style.
@@ -12758,7 +13354,7 @@ native GetMaxPageItems(Handle:hStyle=INVALID_HANDLE);
  * @return				The MenuStyle Handle that created the panel.
  * @error				Invalid Handle.
  */
-native Handle:GetPanelStyle(Handle:panel);
+native Handle GetPanelStyle(Handle panel);
 
 /**
  * Sets the panel's title.
@@ -12766,10 +13362,9 @@ native Handle:GetPanelStyle(Handle:panel);
  * @param panel			A MenuPanel Handle.
  * @param text			Text to set as the title.
  * @param onlyIfEmpty	If true, the title will only be set if no title is set.
- * @noreturn
  * @error				Invalid Handle.
  */
-native Handle:SetPanelTitle(Handle:panel, const String:text[], bool:onlyIfEmpty=false);
+native void SetPanelTitle(Handle panel, const char[] text, bool onlyIfEmpty=false);
 
 /**
  * Draws an item on a panel.  If the item takes up a slot, the position
@@ -12783,7 +13378,7 @@ native Handle:SetPanelTitle(Handle:panel, const String:text[], bool:onlyIfEmpty=
  * @return				A slot position, or 0 if item was a rawline or could not be drawn.
  * @error				Invalid Handle.
  */
-native DrawPanelItem(Handle:panel, const String:text[], style=ITEMDRAW_DEFAULT);
+native int DrawPanelItem(Handle panel, const char[] text, style=ITEMDRAW_DEFAULT);
 
 /**
  * Draws a raw line of text on a panel, without any markup other than a newline.
@@ -12794,7 +13389,7 @@ native DrawPanelItem(Handle:panel, const String:text[], style=ITEMDRAW_DEFAULT);
  * @return				True on success, false if raw lines are not supported.
  * @error				Invalid Handle.
  */
-native DrawPanelText(Handle:panel, const String:text[]);
+native bool DrawPanelText(Handle panel, const char[] text);
 
 /**
  * Returns whether or not the given drawing flags are supported by
@@ -12805,7 +13400,7 @@ native DrawPanelText(Handle:panel, const String:text[]);
  * @return				True if item is drawable, false otherwise.
  * @error				Invalid Handle.
  */
-native CanPanelDrawFlags(Handle:panel, style);
+native bool CanPanelDrawFlags(Handle panel, style);
 
 /**
  * Sets the selectable key map of a panel.  This is not supported by
@@ -12817,7 +13412,7 @@ native CanPanelDrawFlags(Handle:panel, style);
  *						then key 0 (bit 9) is automatically set.
  * @return 				True if supported, false otherwise.
  */
-native bool:SetPanelKeys(Handle:panel, keys);
+native bool SetPanelKeys(Handle panel, int keys);
 
 /**
  * Sends a panel to a client.  Unlike full menus, the handler
@@ -12837,7 +13432,7 @@ native bool:SetPanelKeys(Handle:panel, keys);
  * @return				True on success, false on failure.
  * @error				Invalid Handle.
  */
-native bool:SendPanelToClient(Handle:panel, client, MenuHandler:handler, time);
+native bool SendPanelToClient(Handle panel, int client, MenuHandler handler, int time);
 
 /**
  * @brief Returns the amount of text the menu can still hold.  If this is 
@@ -12851,7 +13446,7 @@ native bool:SendPanelToClient(Handle:panel, client, MenuHandler:handler, time);
  *						or -1 if there is no known limit.
  * @error				Invalid Handle.
  */
-native GetPanelTextRemaining(Handle:panel);
+native int GetPanelTextRemaining(Handle panel);
 
 /**
  * @brief Returns the current key position.
@@ -12860,7 +13455,7 @@ native GetPanelTextRemaining(Handle:panel);
  * @return				Current key position starting at 1.
  * @error				Invalid Handle.
  */
-native GetPanelCurrentKey(Handle:panel);
+native int GetPanelCurrentKey(Handle panel);
 
 /**
  * @brief Sets the next key position.  This cannot be used
@@ -12872,7 +13467,7 @@ native GetPanelCurrentKey(Handle:panel);
  * @return				True on success, false otherwise.
  * @error				Invalid Handle.
  */
-native bool:SetPanelCurrentKey(Handle:panel, key);
+native bool SetPanelCurrentKey(Handle panel, int key);
 
 /**
  * @brief Redraws menu text from inside a MenuAction_DisplayItem callback.
@@ -12880,7 +13475,7 @@ native bool:SetPanelCurrentKey(Handle:panel, key);
  * @param text			Menu text to draw.
  * @return				Item position; must be returned via the callback.
  */
-native RedrawMenuItem(const String:text[]);
+native int RedrawMenuItem(const char[] text);
 
 /**
  * This function is provided for legacy code only.  Some older plugins may use 
@@ -12900,7 +13495,7 @@ native RedrawMenuItem(const String:text[]);
  * @return				True on success, false on failure.
  * @error				Invalid client index, or radio menus not supported.
  */
-native bool:InternalShowMenu(client, const String:str[], time, keys=-1, MenuHandler:handler=INVALID_FUNCTION);
+native bool InternalShowMenu(int client, const char[] str, int time, int keys=-1, MenuHandler handler=INVALID_FUNCTION);
 
 /**
  * Retrieves voting information from MenuAction_VoteEnd.
@@ -12908,9 +13503,8 @@ native bool:InternalShowMenu(client, const String:str[], time, keys=-1, MenuHand
  * @param param2		Second parameter of MenuAction_VoteEnd.
  * @param winningVotes	Number of votes received by the winning option.
  * @param totalVotes	Number of total votes received.
- * @noreturn
  */
-stock GetMenuVoteInfo(param2, &winningVotes, &totalVotes)
+stock void GetMenuVoteInfo(param2, &winningVotes, &totalVotes)
 {
 	winningVotes = param2 & 0xFFFF;
 	totalVotes = param2 >> 16;
@@ -12924,7 +13518,7 @@ stock GetMenuVoteInfo(param2, &winningVotes, &totalVotes)
  * @return				True if voting is allowed, false if voting is in progress
  *						or the cooldown is active.
  */
-stock bool:IsNewVoteAllowed()
+stock bool IsNewVoteAllowed()
 {
 	if (IsVoteInProgress() || CheckVoteDelay() != 0)
 	{
@@ -14144,7 +14738,9 @@ typeset SDKHookCB
 	// OnTakeDamagePost
 	// OnTakeDamageAlivePost
 	function void (int victim, int attacker, int inflictor, float damage, int damagetype);
-	function void (int victim, int attacker, int inflictor, float damage, int damagetype, const float damageForce[3], const float damagePosition[3]);
+	function void (int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3]);
+	function void (int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, 
+		const float damageForce[3], const float damagePosition[3], int damagecustom);
 	
 	// FireBulletsPost
 	function void (int client, int shots, const char[] weaponname);
@@ -19410,7 +20006,7 @@ enum TFCond
 	TFCond_RegenBuffed,
 	TFCond_MarkedForDeath,
 	TFCond_NoHealingDamageBuff,
-	TFCond_SpeedBuffAlly,		//32
+	TFCond_SpeedBuffAlly, // 32
 	TFCond_HalloweenCritCandy,
 	TFCond_CritCanteen,
 	TFCond_CritDemoCharge,
@@ -19467,6 +20063,15 @@ enum TFCond
 	TFCond_SwimmingCurse,
 	TFCond_HalloweenKartNoTurn,
 	TFCond_HalloweenKartCage,
+	TFCond_HasRune,
+	TFCond_RuneStrength,
+	TFCond_RuneHaste,
+	TFCond_RuneRegen,
+	TFCond_RuneResist,
+	TFCond_RuneVampire,
+	TFCond_RuneWarlock,
+	TFCond_RunePrecision, // 96
+	TFCond_RuneAgility,
 };
 
 const Float:TFCondDuration_Infinite = -1.0;
@@ -21081,7 +21686,7 @@ stock Protobuf UserMessageToProtobuf(Handle msg)
 // Make sure to only call this on writable buffers (eg from StartMessage).
 stock BfWrite UserMessageToBfWrite(Handle msg)
 {
-	if (GetUserMessageType() != UM_Protobuf)
+	if (GetUserMessageType() == UM_Protobuf)
 		return null;
 	return BfWrite:msg;
 }
@@ -21089,7 +21694,7 @@ stock BfWrite UserMessageToBfWrite(Handle msg)
 // Make sure to only call this on readable buffers (eg from a message hook).
 stock BfWrite UserMessageToBfRead(Handle msg)
 {
-	if (GetUserMessageType() != UM_Protobuf)
+	if (GetUserMessageType() == UM_Protobuf)
 		return null;
 	return BfRead:msg;
 }
@@ -21152,19 +21757,39 @@ native Handle:StartMessageEx(UserMsg:msg, clients[], numClients, flags=0);
 native EndMessage();
 
 /**
- * Called when a message is hooked
- *
- * @param msg_id		Message index.
- * @param msg			Handle to the input bit buffer or protobuf.
- * @param players		Array containing player indexes.
- * @param playersNum	Number of players in the array.
- * @param reliable		True if message is reliable, false otherwise.
- * @param init			True if message is an initmsg, false otherwise.
- * @return				Ignored for normal hooks.  For intercept hooks, Plugin_Handled 
- *						blocks the message from being sent, and Plugin_Continue 
- *						resumes normal functionality.
- */
-typedef MsgHook = function Action (UserMsg msg_id, Handle msg, const int[] players, int playersNum, bool reliable, bool init);
+ * Hook function types for user messages.
+*/
+typeset MsgHook
+{
+	/**
+	 * Called when a bit buffer based usermessage is hooked
+	 *
+	 * @param msg_id		Message index.
+	 * @param msg			Handle to the input bit buffer.
+	 * @param players		Array containing player indexes.
+	 * @param playersNum	Number of players in the array.
+	 * @param reliable		True if message is reliable, false otherwise.
+	 * @param init			True if message is an initmsg, false otherwise.
+	 * @return				Ignored for normal hooks.  For intercept hooks, Plugin_Handled 
+	 *						blocks the message from being sent, and Plugin_Continue 
+	 *						resumes normal functionality.
+	 */
+	function Action (UserMsg msg_id, BfRead msg, const int[] players, int playersNum, bool reliable, bool init);
+	/**
+	 * Called when a protobuf based usermessage is hooked
+	 *
+	 * @param msg_id		Message index.
+	 * @param msg			Handle to the input protobuf.
+	 * @param players		Array containing player indexes.
+	 * @param playersNum	Number of players in the array.
+	 * @param reliable		True if message is reliable, false otherwise.
+	 * @param init			True if message is an initmsg, false otherwise.
+	 * @return				Ignored for normal hooks.  For intercept hooks, Plugin_Handled 
+	 *						blocks the message from being sent, and Plugin_Continue 
+	 *						resumes normal functionality.
+	 */
+	function Action (UserMsg msg_id, Protobuf msg, const int[] players, int playersNum, bool reliable, bool init);
+};
 
 /**
  * Called when a message hook has completed.
