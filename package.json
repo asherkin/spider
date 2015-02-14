@@ -6,7 +6,7 @@
   "license": "GPL-3.0+",
   "repository": {
     "type": "git",
-    "url": "https://code.limetech.org/diffusion/SP/spider.git"
+    "url": "https://github.com/asherkin/spider.git"
   },
   "author": {
     "name": "Asher Baker",
