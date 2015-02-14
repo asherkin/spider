@@ -1,12 +1,18 @@
 {
   "name": "spider",
-  "version": "0.0.0",
-  "description": "SourcePawn Compiler",
+  "version": "1.0.0",
+  "description": "SourcePawn Web Compiler",
+  "homepage": "https://spider.limetech.org/",
+  "license": "GPL-3.0+",
   "repository": {
     "type": "git",
-    "url": "http://code.limetech.org/diffusion/SP/spider.git"
+    "url": "https://code.limetech.org/diffusion/SP/spider.git"
   },
-  "author": "Asher Baker <asherkin@gmail.com>",
+  "author": {
+    "name": "Asher Baker",
+    "email": "asherkin@limetech.org",
+    "url": "https://limetech.org/"
+  },
   "devDependencies": {
     "grunt": "~0.4.5",
     "grunt-appcache": "~0.1.8",
