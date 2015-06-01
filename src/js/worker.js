@@ -6,7 +6,6 @@ var Module;
   Module = {
     noInitialRun: true,
     print: print,
-    postRun: [postRun],
     arguments: ['-iextra', '-iinclude'],
   };
 
@@ -52,6 +51,8 @@ var Module;
     }
 
     shouldRunNow = true;
+    Module['calledRun'] = false;
+    Module['postRun'] = [postRun];
     Module.run();
   };
 

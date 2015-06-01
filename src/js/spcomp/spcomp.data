@@ -168,21 +168,174 @@ enum AdminCachePart
 	AdminCache_Admins = 2,			/**< All admins */
 };
 
+methodmap AdminId {
+	// Retrieves an admin's user name as made with CreateAdmin().
+	//
+	// @note This function can return UTF-8 strings, and will safely chop UTF-8 strings.
+	//
+	// @param name          String buffer to store name.
+	// @param maxlength     Maximum size of string buffer.
+	// @return              Number of bytes written.
+	public native void GetUsername(char[] name, int maxlength);
+
+	// Binds an admin to an identity for fast lookup later on.  The bind must be unique.
+	//
+	// @param authMethod    Auth method to use, predefined or from RegisterAuthIdentType().
+	// @param ident         String containing the arbitrary, unique identity.
+	// @return              True on success, false if the auth method was not found,
+	//                      ident was already taken, or ident invalid for auth method.
+	public native bool BindIdentity(const char[] authMethod, const char[] ident);
+
+	// Sets whether or not a flag is enabled on an admin.
+	//
+	// @param flag          Admin flag to use.
+	// @param enabled       True to enable, false to disable.
+	public native void SetFlag(AdminFlag flag, bool enabled);
+
+	// Returns whether or not a flag is enabled on an admin.
+	//
+	// @param flag          Admin flag to use.
+	// @param mode          Access mode to check.
+	// @return              True if enabled, false otherwise.
+	public native bool HasFlag(AdminFlag flag, AdmAccessMode mode=Access_Effective);
+
+	// Returns the bitstring of access flags on an admin.
+	//
+	// @param mode          Access mode to use.
+	// @return              A bitstring containing which flags are enabled.
+	public native int GetFlags(AdmAccessMode mode);
+
+	// Adds a group to an admin's inherited group list.  Any flags the group has
+	// will be added to the admin's effective flags.
+	//
+	// @param gid           GroupId index of the group.
+	// @return              True on success, false on invalid input or duplicate membership.
+	public native bool InheritGroup(GroupId gid);
+
+	// Returns group information from an admin.
+	//
+	// @param index         Group number to retrieve, from 0 to N-1, where N
+	//                      is the value of the GroupCount property.
+	// @param name          Buffer to store the group's name.
+	//                      Note: This will safely chop UTF-8 strings.
+	// @param maxlength     Maximum size of the output name buffer.
+	// @return              A GroupId index and a name pointer, or
+	//                      INVALID_GROUP_ID and NULL if an error occurred.
+	public native GroupId GetGroup(int index, const char[] name, int maxlength);
+
+	// Sets a password on an admin.
+	//
+	// @param password      String containing the password.
+	public native void SetPassword(const char[] password);
+
+	// Gets an admin's password.
+	//
+	// @param buffer        Optional buffer to store the admin's password.
+	// @param maxlength     Maximum size of the output name buffer.
+	//                      Note: This will safely chop UTF-8 strings.
+	// @return              True if there was a password set, false otherwise.
+	public native bool GetPassword(char[] buffer="", maxlength=0);
+
+	// Tests whether one admin can target another.
+	//
+	// The heuristics for this check are as follows:
+	// 0. If the targeting AdminId is INVALID_ADMIN_ID, targeting fails.
+	// 1. If the targeted AdminId is INVALID_ADMIN_ID, targeting succeeds.
+	// 2. If the targeted AdminId is the same as the targeting AdminId,
+	//    (self) targeting succeeds.
+	// 3. If the targeting admin is root, targeting succeeds.
+	// 4. If the targeted admin has access higher (as interpreted by
+	//    (sm_immunity_mode) than the targeting admin, then targeting fails.
+	// 5. If the targeted admin has specific immunity from the
+	//    targeting admin via group immunities, targeting fails.
+	// 6. Targeting succeeds.
+	//
+	// @param target        Target admin (may be INVALID_ADMIN_ID).
+	// @return              True if targetable, false if immune.
+	public native bool CanTarget(AdminId other);
+
+	// The number of groups of which this admin is a member.
+	property int GroupCount {
+		public native get();
+	}
+
+	// Immunity level used for targetting.
+	property int ImmunityLevel {
+		public native get();
+		public native set(int level);
+	}
+}
+
+methodmap GroupId {
+	// Gets whether or not a flag is enabled on a group's flag set.
+	//
+	// @param flag			Admin flag to retrieve.
+	// @return				True if enabled, false otherwise,
+	public native bool HasFlag(AdminFlag flag);
+
+	// Adds or removes a flag from a group's flag set.
+	//
+	// @param flag			Admin flag to toggle.
+	// @param enabled		True to set the flag, false to unset/disable.
+	public native void SetFlag(AdminFlag flag, bool enabled);
+
+	// Returns the flag set that is added to users from this group.
+	//
+	// @return				Bitstring containing the flags enabled.
+	public native int GetFlags();
+
+	// Returns a group that this group is immune to given an index.
+	//
+	// @param number		Index from 0 to N-1, from GroupImmunitiesCount.
+	// @return				GroupId that this group is immune to, or INVALID_GROUP_ID on failure.
+	public native GroupId GetGroupImmunity(int index);
+
+	// Adds immunity to a specific group.
+	//
+	// @param other			Group id to receive immunity to.
+	public native void AddGroupImmunity(GroupId other);
+
+	// Retrieves a group-specific command override.
+	//
+	// @param name			String containing command name (case sensitive).
+	// @param type			Override type (specific command or group).
+	// @param rule			Optional pointer to store allow/deny setting.
+	// @return				True if an override exists, false otherwise.
+	public native bool GetCommandOverride(const char[] name, OverrideType type, OverrideRule &rule);
+
+	// Adds a group-specific override type.
+	//
+	// @param name			String containing command name (case sensitive).
+	// @param type			Override type (specific command or group).
+	// @param rule			Override allow/deny setting.
+	public native void AddCommandOverride(const char[] name, OverrideType type, OverrideRule rule);
+
+	// Number of specific group immunities
+	property int GroupImmunitiesCount {
+		public native get();
+	}
+
+	// Immunity level used for targetting.
+	property int ImmunityLevel {
+		public native get();
+		public native set(int level);
+	}
+}
+
 /**
  * Called when part of the cache needs to be rebuilt.
  *
  * @param part			Part of the admin cache to rebuild.
  */
-forward OnRebuildAdminCache(AdminCachePart:part);
+forward void OnRebuildAdminCache(AdminCachePart part);
 
 /**
  * Tells the admin system to dump a portion of the cache.
  *
  * @param part			Part of the cache to dump.  Specifying groups also dumps admins.
  * @param rebuild		If true, the rebuild forwards will fire.
- * @noreturn
  */
-native DumpAdminCache(AdminCachePart:part, bool:rebuild);
+native void DumpAdminCache(AdminCachePart part, bool rebuild);
 
 /**
  * Adds a global command flag override.  Any command registered with this name
@@ -191,9 +344,8 @@ native DumpAdminCache(AdminCachePart:part, bool:rebuild);
  * @param cmd			String containing command name (case sensitive).
  * @param type			Override type (specific command or group).
  * @param flags			New admin flag.
- * @noreturn
  */
-native AddCommandOverride(const String:cmd[], OverrideType:type, flags);
+native void AddCommandOverride(const char[] cmd, OverrideType type, int flags);
 
 /**
  * Returns a command override.
@@ -203,16 +355,15 @@ native AddCommandOverride(const String:cmd[], OverrideType:type, flags);
  * @param flags			By-reference cell to store the flag (undefined if not found).
  * @return				True if there is an override, false otherwise.
  */
-native bool:GetCommandOverride(const String:cmd[], OverrideType:type, &flags);
+native bool GetCommandOverride(const char[] cmd, OverrideType type, int &flags);
 
 /**
  * Unsets a command override.
  *
  * @param cmd			String containing command name (case sensitive).
  * @param type			Override type (specific command or group).
- * @noreturn
  */
-native UnsetCommandOverride(const String:cmd[], OverrideType:type);
+native void UnsetCommandOverride(const char[] cmd, OverrideType type);
 
 /**
  * Adds a new group.  Name must be unique.
@@ -220,7 +371,7 @@ native UnsetCommandOverride(const String:cmd[], OverrideType:type);
  * @param group_name	String containing the group name.
  * @return				A new group id, INVALID_GROUP_ID if it already exists.
  */
-native GroupId:CreateAdmGroup(const String:group_name[]);
+native GroupId CreateAdmGroup(const char[] group_name);
 
 /**
  * Finds a group by name.
@@ -228,7 +379,7 @@ native GroupId:CreateAdmGroup(const String:group_name[]);
  * @param group_name	String containing the group name.
  * @return				A group id, or INVALID_GROUP_ID if not found.
  */
-native GroupId:FindAdmGroup(const String:group_name[]);
+native GroupId FindAdmGroup(const char[] group_name);
 
 /**
  * Adds or removes a flag from a group's flag set.
@@ -237,9 +388,8 @@ native GroupId:FindAdmGroup(const String:group_name[]);
  * @param id			Group id.
  * @param flag			Admin flag to toggle.
  * @param enabled		True to set the flag, false to unset/disable.
- * @noreturn
  */
-native SetAdmGroupAddFlag(GroupId:id, AdminFlag:flag, bool:enabled);
+native void SetAdmGroupAddFlag(GroupId id, AdminFlag flag, bool enabled);
 
 /**
  * Gets the set value of an add flag on a group's flag set.
@@ -249,7 +399,7 @@ native SetAdmGroupAddFlag(GroupId:id, AdminFlag:flag, bool:enabled);
  * @param flag			Admin flag to retrieve.
  * @return				True if enabled, false otherwise,
  */
-native bool:GetAdmGroupAddFlag(GroupId:id, AdminFlag:flag);
+native bool GetAdmGroupAddFlag(GroupId id, AdminFlag flag);
 
 /**
  * Returns the flag set that is added to a user from their group.
@@ -258,28 +408,27 @@ native bool:GetAdmGroupAddFlag(GroupId:id, AdminFlag:flag);
  * @param id			GroupId of the group.
  * @return				Bitstring containing the flags enabled.
  */
-native GetAdmGroupAddFlags(GroupId:id);
+native int GetAdmGroupAddFlags(GroupId id);
 
 /**
  * @deprecated			Functionality removed.
  */
 #pragma deprecated Use SetAdmGroupImmunityLevel() instead.
-native SetAdmGroupImmunity(GroupId:id, ImmunityType:type, bool:enabled);
+native void SetAdmGroupImmunity(GroupId id, ImmunityType type, bool enabled);
 
 /**
  * @deprecated			Functionality removed.
  */
 #pragma deprecated Use GetAdmGroupImmunityLevel() instead.
-native bool:GetAdmGroupImmunity(GroupId:id, ImmunityType:type);
+native bool GetAdmGroupImmunity(GroupId id, ImmunityType type);
 
 /**
  * Adds immunity to a specific group.
  *
  * @param id			Group id.
  * @param other_id		Group id to receive immunity to.
- * @noreturn
  */
-native SetAdmGroupImmuneFrom(GroupId:id, GroupId:other_id);
+native void SetAdmGroupImmuneFrom(GroupId id, GroupId other_id);
 
 /**
  * Returns the number of specific group immunities.
@@ -287,7 +436,7 @@ native SetAdmGroupImmuneFrom(GroupId:id, GroupId:other_id);
  * @param id			Group id.
  * @return				Number of group immunities.
  */
-native GetAdmGroupImmuneCount(GroupId:id);
+native int GetAdmGroupImmuneCount(GroupId id);
 
 /**
  * Returns a group that this group is immune to given an index.
@@ -296,7 +445,7 @@ native GetAdmGroupImmuneCount(GroupId:id);
  * @param number		Index from 0 to N-1, from GetAdmGroupImmuneCount().
  * @return				GroupId that this group is immune to, or INVALID_GROUP_ID on failure.
  */
-native GroupId:GetAdmGroupImmuneFrom(GroupId:id, number); 
+native GroupId GetAdmGroupImmuneFrom(GroupId id, int number); 
 
 /**
  * Adds a group-specific override type.
@@ -305,9 +454,8 @@ native GroupId:GetAdmGroupImmuneFrom(GroupId:id, number);
  * @param name			String containing command name (case sensitive).
  * @param type			Override type (specific command or group).
  * @param rule			Override allow/deny setting.
- * @noreturn
  */
-native AddAdmGroupCmdOverride(GroupId:id, const String:name[], OverrideType:type, OverrideRule:rule);
+native void AddAdmGroupCmdOverride(GroupId id, const char[] name, OverrideType type, OverrideRule rule);
 
 /**
  * Retrieves a group-specific command override.
@@ -318,16 +466,15 @@ native AddAdmGroupCmdOverride(GroupId:id, const String:name[], OverrideType:type
  * @param rule			Optional pointer to store allow/deny setting.
  * @return				True if an override exists, false otherwise.
  */
-native bool:GetAdmGroupCmdOverride(GroupId:id, const String:name[], OverrideType:type, &OverrideRule:rule);
+native bool GetAdmGroupCmdOverride(GroupId id, const char[] name, OverrideType type, OverrideRule &rule);
 
 /**
  * Registers an authentication identity type.  You normally never need to call this except for 
  * very specific systems.
  *
  * @param name		Codename to use for your authentication type.
- * @noreturn
  */
-native RegisterAuthIdentType(const String:name[]);
+native void RegisterAuthIdentType(const char[] name);
 
 /**
  * Creates a new admin entry in the permissions cache.
@@ -335,7 +482,7 @@ native RegisterAuthIdentType(const String:name[]);
  * @param name			Name for this entry (does not have to be unique).
  * 						Specify an empty string for an anonymous admin.
  */
-native AdminId:CreateAdmin(const String:name[]="");
+native AdminId CreateAdmin(const char[] name="");
 
 /**
  * Retrieves an admin's user name as made with CreateAdmin().
@@ -347,7 +494,7 @@ native AdminId:CreateAdmin(const String:name[]="");
  * @param maxlength		Maximum size of string buffer.
  * @return				Number of bytes written.
  */
-native GetAdminUsername(AdminId:id, String:name[], maxlength);
+native int GetAdminUsername(AdminId id, char[] name, int maxlength);
 
 /**
  * Binds an admin to an identity for fast lookup later on.  The bind must be unique.
@@ -358,7 +505,7 @@ native GetAdminUsername(AdminId:id, String:name[], maxlength);
  * @return				True on success, false if the auth method was not found,
  *						ident was already taken, or ident invalid for auth method.
  */
-native bool:BindAdminIdentity(AdminId:id, const String:auth[], const String:ident[]);
+native bool BindAdminIdentity(AdminId id, const char[] auth, const char[] ident);
 
 /**
  * Sets whether or not a flag is enabled on an admin.
@@ -366,9 +513,8 @@ native bool:BindAdminIdentity(AdminId:id, const String:auth[], const String:iden
  * @param id			AdminId index of the admin.
  * @param flag			Admin flag to use.
  * @param enabled		True to enable, false to disable.
- * @noreturn
  */
-native SetAdminFlag(AdminId:id, AdminFlag:flag, bool:enabled);
+native void SetAdminFlag(AdminId id, AdminFlag flag, bool enabled);
 
 /**
  * Returns whether or not a flag is enabled on an admin.
@@ -378,7 +524,7 @@ native SetAdminFlag(AdminId:id, AdminFlag:flag, bool:enabled);
  * @param mode			Access mode to check.
  * @return				True if enabled, false otherwise.
  */
-native bool:GetAdminFlag(AdminId:id, AdminFlag:flag, AdmAccessMode:mode=Access_Effective);
+native bool GetAdminFlag(AdminId id, AdminFlag flag, AdmAccessMode mode=Access_Effective);
 
 /**
  * Returns the bitstring of access flags on an admin.
@@ -387,7 +533,7 @@ native bool:GetAdminFlag(AdminId:id, AdminFlag:flag, AdmAccessMode:mode=Access_E
  * @param mode			Access mode to use.
  * @return				A bitstring containing which flags are enabled.
  */
-native GetAdminFlags(AdminId:id, AdmAccessMode:mode);
+native int GetAdminFlags(AdminId id, AdmAccessMode mode);
 
 /**
  * Adds a group to an admin's inherited group list.  Any flags the group has 
@@ -397,7 +543,7 @@ native GetAdminFlags(AdminId:id, AdmAccessMode:mode);
  * @param gid			GroupId index of the group.
  * @return				True on success, false on invalid input or duplicate membership.
  */
-native bool:AdminInheritGroup(AdminId:id, GroupId:gid);
+native bool AdminInheritGroup(AdminId id, GroupId gid);
 
 /**
  * Returns the number of groups this admin is a member of.
@@ -405,7 +551,7 @@ native bool:AdminInheritGroup(AdminId:id, GroupId:gid);
  * @param id			AdminId index of the admin.
  * @return				Number of groups this admin is a member of.
  */
-native GetAdminGroupCount(AdminId:id);
+native int GetAdminGroupCount(AdminId id);
 
 /**
  * Returns group information from an admin.
@@ -418,17 +564,16 @@ native GetAdminGroupCount(AdminId:id);
  * @param maxlength		Maximum size of the output name buffer.
  * @return				A GroupId index and a name pointer, or
  *						INVALID_GROUP_ID and NULL if an error occurred.
-*/
-native GroupId:GetAdminGroup(AdminId:id, index, const String:name[], maxlength);
+ */
+native GroupId GetAdminGroup(AdminId id, int index, const char[] name, int maxlength);
 
 /**
  * Sets a password on an admin.
  *
  * @param id			AdminId index of the admin.
  * @param password		String containing the password.
- * @noreturn
  */
-native SetAdminPassword(AdminId:id, const String:password[]);
+native void SetAdminPassword(AdminId id, const char[] password);
 
 /**
  * Gets an admin's password.
@@ -439,7 +584,7 @@ native SetAdminPassword(AdminId:id, const String:password[]);
  *						Note: This will safely chop UTF-8 strings.
  * @return				True if there was a password set, false otherwise.
  */
-native bool:GetAdminPassword(AdminId:id, String:buffer[]="", maxlength=0);
+native bool GetAdminPassword(AdminId id, char buffer[]="", int maxlength=0);
 
 /**
  * Attempts to find an admin by an auth method and an identity.
@@ -448,7 +593,7 @@ native bool:GetAdminPassword(AdminId:id, String:buffer[]="", maxlength=0);
  * @param identity		Identity string to look up.
  * @return				An AdminId index if found, INVALID_ADMIN_ID otherwise.
  */
-native AdminId:FindAdminByIdentity(const String:auth[], const String:identity[]);
+native AdminId FindAdminByIdentity(const char[] auth, const char[] identity);
 
 /**
  * Removes an admin entry from the cache.
@@ -458,7 +603,7 @@ native AdminId:FindAdminByIdentity(const String:auth[], const String:identity[])
  * @param id			AdminId index to remove/invalidate.
  * @return				True on success, false otherwise.
  */
-native bool:RemoveAdmin(AdminId:id);
+native bool RemoveAdmin(AdminId id);
 
 /**
  * Converts a flag bit string to a bit array.
@@ -468,7 +613,7 @@ native bool:RemoveAdmin(AdminId:id);
  * @param maxSize		Maximum number of flags the array can store.
  * @return				Number of flags written.
  */
-native FlagBitsToBitArray(bits, bool:array[], maxSize);
+native int FlagBitsToBitArray(int bits, bool[] array, int maxSize);
 
 /**
  * Converts a flag array to a bit string.
@@ -477,7 +622,7 @@ native FlagBitsToBitArray(bits, bool:array[], maxSize);
  * @param maxSize		Maximum size of the flag array.
  * @return				A bit string composed of the array bits.
  */
-native FlagBitArrayToBits(const bool:array[], maxSize);
+native int FlagBitArrayToBits(const bool[] array, int maxSize);
 
 /**
  * Converts an array of flags to bits.
@@ -486,7 +631,7 @@ native FlagBitArrayToBits(const bool:array[], maxSize);
  * @param numFlags		Number of flags in the array.
  * @return				A bit string composed of the array flags.
  */
-native FlagArrayToBits(const AdminFlag:array[], numFlags);
+native int FlagArrayToBits(const AdminFlag[] array, int numFlags);
 
 /**
  * Converts a bit string to an array of flags.
@@ -496,7 +641,7 @@ native FlagArrayToBits(const AdminFlag:array[], numFlags);
  * @param maxSize		Maximum size of the flag array.
  * @return				Number of flags written.
  */
-native FlagBitsToArray(bits, AdminFlag:array[], maxSize);
+native int FlagBitsToArray(int bits, AdminFlag[] array, int maxSize);
 
 /**
  * Finds a flag by its string name.
@@ -505,7 +650,7 @@ native FlagBitsToArray(bits, AdminFlag:array[], maxSize);
  * @param flag			Variable to store flag in.
  * @return				True on success, false if not found.
  */
-native bool:FindFlagByName(const String:name[], &AdminFlag:flag);
+native bool FindFlagByName(const char[] name, AdminFlag &flag);
 
 /**
  * Finds a flag by a given character.
@@ -514,7 +659,7 @@ native bool:FindFlagByName(const String:name[], &AdminFlag:flag);
  * @param flag			Variable to store flag in.
  * @return				True on success, false if not found.
  */
-native bool:FindFlagByChar(c, &AdminFlag:flag);
+native bool FindFlagByChar(int c, AdminFlag &flag);
 
 /**
  * Finds a flag char by a gived admin flag.
@@ -523,7 +668,7 @@ native bool:FindFlagByChar(c, &AdminFlag:flag);
  * @param c                    Variable to store flag char.
  * @return                     True on success, false if not found.
  */
-native bool:FindFlagChar(AdminFlag:flag, &c);
+native bool FindFlagChar(AdminFlag flag, int &c);
 
 /**
  * Converts a string of flag characters to a bit string.
@@ -532,7 +677,7 @@ native bool:FindFlagChar(AdminFlag:flag, &c);
  * @param numchars		Optional variable to store the number of bytes read.
  * @return				Bit string of ADMFLAG values.
  */
-native ReadFlagString(const String:flags[], &numchars=0);
+native int ReadFlagString(const char[] flags, int &numchars=0);
 
 /**
  * Tests whether one admin can target another.
@@ -553,7 +698,7 @@ native ReadFlagString(const String:flags[], &numchars=0);
  * @param target		Target admin (may be INVALID_ADMIN_ID).
  * @return				True if targetable, false if immune.
  */
-native CanAdminTarget(AdminId:admin, AdminId:target);
+native bool CanAdminTarget(AdminId admin, AdminId target);
 
 /**
  * Creates an admin auth method.  This does not need to be called more than once
@@ -562,7 +707,7 @@ native CanAdminTarget(AdminId:admin, AdminId:target);
  * @param method		Name of the authentication method.
  * @return				True on success, false on failure.
  */
-native bool:CreateAuthMethod(const String:method[]);
+native bool CreateAuthMethod(const char[] method);
 
 /**
  * Sets a group's immunity level.
@@ -571,7 +716,7 @@ native bool:CreateAuthMethod(const String:method[]);
  * @param level			Immunity level value.
  * @return				Old immunity level value.
  */
-native SetAdmGroupImmunityLevel(GroupId:gid, level);
+native int SetAdmGroupImmunityLevel(GroupId gid, int level);
 
 /**
  * Gets a group's immunity level (defaults to 0).
@@ -579,7 +724,7 @@ native SetAdmGroupImmunityLevel(GroupId:gid, level);
  * @param gid			Group Id.
  * @return				Immunity level value.
  */
-native GetAdmGroupImmunityLevel(GroupId:gid);
+native int GetAdmGroupImmunityLevel(GroupId gid);
 
 /**
  * Sets an admin's immunity level.
@@ -588,7 +733,7 @@ native GetAdmGroupImmunityLevel(GroupId:gid);
  * @param level			Immunity level value.
  * @return				Old immunity level value.
  */
-native SetAdminImmunityLevel(AdminId:id, level);
+native int SetAdminImmunityLevel(AdminId id, int level);
 
 /**
  * Gets an admin's immunity level.
@@ -596,7 +741,7 @@ native SetAdminImmunityLevel(AdminId:id, level);
  * @param id			Admin Id.
  * @return				Immunity level value.
  */
-native GetAdminImmunityLevel(AdminId:id);
+native int GetAdminImmunityLevel(AdminId id);
 
 /**
  * Converts a flag to its single bit.
@@ -604,9 +749,9 @@ native GetAdminImmunityLevel(AdminId:id);
  * @param flag			Flag to convert.
  * @return				Bit representation of the flag.
  */
-stock FlagToBit(AdminFlag:flag)
+stock int FlagToBit(AdminFlag flag)
 {
-	return (1<<_:flag);
+	return (1 << view_as<int>(flag));
 }
 
 /**
@@ -616,9 +761,9 @@ stock FlagToBit(AdminFlag:flag)
  * @param flag			Stores the converted flag by reference.
  * @return				True on success, false otherwise.
  */
-stock bool:BitToFlag(bit, &AdminFlag:flag)
+stock bool BitToFlag(int bit, AdminFlag &flag)
 {
-	new AdminFlag:array[1];
+	AdminFlag array[1];
 	
 	if (FlagBitsToArray(bit, array, 1))
 	{
@@ -694,17 +839,15 @@ stock bool:BitToFlag(bit, &AdminFlag:flag)
  * the Handle or add categories.
  * 
  * @param topmenu		Handle to the admin menu's TopMenu.
- * @noreturn
  */
-forward OnAdminMenuCreated(Handle topmenu);
+forward void OnAdminMenuCreated(Handle topmenu);
 
 /**
  * Called when the admin menu is ready to have items added.
  * 
  * @param topmenu		Handle to the admin menu's TopMenu.
- * @noreturn
  */
-forward OnAdminMenuReady(Handle topmenu);
+forward void OnAdminMenuReady(Handle topmenu);
 
 /**
  * Retrieves the Handle to the admin top menu.
@@ -834,7 +977,7 @@ public __pl_adminmenu_SetNTVOptional()
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, version 3.0, as published by the
  * Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
@@ -854,14 +997,14 @@ public __pl_adminmenu_SetNTVOptional()
  *
  * Version: $Id$
  */
- 
+
 #if defined _adt_array_included
  #endinput
 #endif
 #define _adt_array_included
 
 /**
- * Given a maximum string size (including the null terminator), 
+ * Given a maximum string size (including the null terminator),
  * returns the number of cells required to fit that string.
  *
  * @param size			Number of bytes.
@@ -877,16 +1020,16 @@ stock ByteCountToCells(size)
 methodmap ArrayList < Handle {
 	// Creates a dynamic global cell array.  While slower than a normal array,
 	// it can be used globally AND dynamically, which is otherwise impossible.
-	// 
-	// The contents of the array are uniform; i.e. storing a string at index X 
+	//
+	// The contents of the array are uniform; i.e. storing a string at index X
 	// and then retrieving it as an integer is NOT the same as StringToInt()!
 	// The "blocksize" determines how many cells each array slot has; it cannot
 	// be changed after creation.
 	//
-	// @param blocksize     The number of cells each member of the array can 
+	// @param blocksize     The number of cells each member of the array can
 	//                      hold.  For example, 32 cells is equivalent to:
 	//                      new Array[X][32]
-	// @param startsize     Initial size of the array.  Note that data will 
+	// @param startsize     Initial size of the array.  Note that data will
 	//                      NOT be auto-intialized.
 	// @return              New Handle to the array object.
 	public native ArrayList(int blocksize=1, int startsize=0);
@@ -931,7 +1074,7 @@ methodmap ArrayList < Handle {
 	//
 	// @param values        Block of values to copy.
 	// @param size          If not set, the number of elements copied from the array
-	//                      will be equal to the blocksize.  If set higher than the 
+	//                      will be equal to the blocksize.  If set higher than the
 	//                      blocksize, the operation will be truncated.
 	// @return              Index of the new entry.
 	public native int PushArray(const any[] values, int size=-1);
@@ -993,15 +1136,15 @@ methodmap ArrayList < Handle {
 	// @error               Invalid index.
 	public native void SetArray(int index, const any[] values, int size=-1);
 
-	// Shifts an array up.  All array contents after and including the given 
-	// index are shifted up by one, and the given index is then "free."  
+	// Shifts an array up.  All array contents after and including the given
+	// index are shifted up by one, and the given index is then "free."
 	// After shifting, the contents of the given index is undefined.
 	//
 	// @param index         Index in the array to shift up from.
 	// @error               Invalid index.
 	public native void ShiftUp(int index);
 
-	// Removes an array index, shifting the entire array down from that position 
+	// Removes an array index, shifting the entire array down from that position
 	// on.  For example, if item 8 of 10 is removed, the last 3 items will then be
 	// (6,7,8) instead of (7,8,9), and all indexes before 8 will remain unchanged.
 	//
@@ -1022,13 +1165,15 @@ methodmap ArrayList < Handle {
 	// @param item          String to search for
 	// @return              Array index, or -1 on failure
 	public native int FindString(const char[] item);
-	 
+
 	// Returns the index for the first occurance of the provided value. If the
 	// value cannot be located, -1 will be returned.
 	//
 	// @param item          Value to search for
+    // @param block         Optionally which block to search in
 	// @return              Array index, or -1 on failure
-	public native int FindValue(any item); 
+	// @error               Invalid block index
+	public native int FindValue(any item, int block=0);
 
 	// Retrieve the size of the array.
 	property int Length {
@@ -1039,16 +1184,16 @@ methodmap ArrayList < Handle {
 /**
  * Creates a dynamic global cell array.  While slower than a normal array,
  * it can be used globally AND dynamically, which is otherwise impossible.
- * 
- * The contents of the array are uniform; i.e. storing a string at index X 
+ *
+ * The contents of the array are uniform; i.e. storing a string at index X
  * and then retrieving it as an integer is NOT the same as StringToInt()!
  * The "blocksize" determines how many cells each array slot has; it cannot
  * be changed after creation.
  *
- * @param blocksize		The number of cells each member of the array can 
+ * @param blocksize		The number of cells each member of the array can
  *						hold.  For example, 32 cells is equivalent to:
  *						new Array[X][32]
- * @param startsize		Initial size of the array.  Note that data will 
+ * @param startsize		Initial size of the array.  Note that data will
  *						NOT be auto-intialized.
  * @return				New Handle to the array object.
  */
@@ -1125,7 +1270,7 @@ native int PushArrayString(Handle array, const char[] value);
  * @param array			Array Handle.
  * @param values		Block of values to copy.
  * @param size			If not set, the number of elements copied from the array
- *						will be equal to the blocksize.  If set higher than the 
+ *						will be equal to the blocksize.  If set higher than the
  *						blocksize, the operation will be truncated.
  * @return				Index of the new entry.
  * @error				Invalid Handle or out of memory.
@@ -1208,8 +1353,8 @@ native int SetArrayString(Handle array, int index, const char[] value);
 native int SetArrayArray(Handle array, int index, const any[] values, int size=-1);
 
 /**
- * Shifts an array up.  All array contents after and including the given 
- * index are shifted up by one, and the given index is then "free."  
+ * Shifts an array up.  All array contents after and including the given
+ * index are shifted up by one, and the given index is then "free."
  * After shifting, the contents of the given index is undefined.
  *
  * @param array			Array Handle.
@@ -1219,7 +1364,7 @@ native int SetArrayArray(Handle array, int index, const any[] values, int size=-
 native void ShiftArrayUp(Handle array, int index);
 
 /**
- * Removes an array index, shifting the entire array down from that position 
+ * Removes an array index, shifting the entire array down from that position
  * on.  For example, if item 8 of 10 is removed, the last 3 items will then be
  * (6,7,8) instead of (7,8,9), and all indexes before 8 will remain unchanged.
  *
@@ -1249,17 +1394,18 @@ native void SwapArrayItems(Handle array, int index1, int index2);
  * @error				Invalid Handle
  */
 native int FindStringInArray(Handle array, const char[] item);
- 
+
 /**
  * Returns the index for the first occurance of the provided value. If the value
  * cannot be located, -1 will be returned.
  *
  * @param array			Array Handle.
  * @param item			Value to search for
+ * @param block			Optionally which block to search in
  * @return				Array index, or -1 on failure
- * @error				Invalid Handle
+ * @error				Invalid Handle or invalid block
  */
-native int FindValueInArray(Handle array, any item); 
+native int FindValueInArray(Handle array, any item, int block=0);
 /**
  * vim: set ts=4 sw=4 tw=99 noet :
  * =============================================================================
@@ -2003,7 +2149,7 @@ native bool:RemoveBan(const String:identity[],
  * @param	client		Client index
  * @param	muteState	True if client was muted, false otherwise
  */
- forward BaseComm_OnClientMute(client, bool:muteState);
+ forward void BaseComm_OnClientMute(client, bool:muteState);
  
  /**
  * Called when a client is gagged or ungagged
@@ -2011,7 +2157,7 @@ native bool:RemoveBan(const String:identity[],
  * @param	client		Client index
  * @param	gagState	True if client was gaged, false otherwise
  */
- forward BaseComm_OnClientGag(client, bool:gagState);
+ forward void BaseComm_OnClientGag(client, bool:gagState);
  
 /**
  * Returns whether or not a client is gagged
@@ -2698,7 +2844,7 @@ native bool:AreClientCookiesCached(client);
  *
  * @param client		Client index.
  */
-forward OnClientCookiesCached(client);
+forward void OnClientCookiesCached(client);
 
 /**
  * Cookie Menu Callback prototype
@@ -2898,9 +3044,6 @@ enum AuthIdType
 /**
  * MAXPLAYERS is not the same as MaxClients.
  * MAXPLAYERS is a hardcoded value as an upper limit.  MaxClients changes based on the server.
- *
- * Both GetMaxClients() and MaxClients are only available once the map is loaded, and should 
- * not be used in OnPluginStart().
  */
 
 #define MAXPLAYERS		65	/**< Maximum number of players SourceMod supports */
@@ -5476,7 +5619,7 @@ forward Action:CS_OnBuyCommand(client, const String:weapon[]);
 /**
  * Called when CSWeaponDrop is called
  * Return Plugin_Continue to allow the call or return a
- * higher action to deny.
+ * higher action to block.
  *
  * @param client	Client index
  * @param weaponIndex	Weapon index
@@ -6413,15 +6556,13 @@ stock Database SQLite_UseDatabase(const char[] database,
 			  					  char[] error, 
 			  					  maxlength)
 {
-	Handle kv, db;
+	KeyValues kv = CreateKeyValues("");
+	kv.SetString("driver", "sqlite");
+	kv.SetString("database", database);
 
-	kv = CreateKeyValues("");
-	KvSetString(kv, "driver", "sqlite");
-	KvSetString(kv, "database", database);
+	Database db = SQL_ConnectCustom(kv, error, maxlength, false);
 
-	db = SQL_ConnectCustom(kv, error, maxlength, false);
-
-	CloseHandle(kv);
+	delete kv;
 
 	return db;
 }
@@ -9989,10 +10130,10 @@ native Call_PushString(const String:value[]);
  * @param value				String to push.
  * @param length			Length of string buffer.
  * @param szflags			Flags determining how string should be handled.
- *							See SP_PARAM_STRING_* constants for details.
+ *							See SM_PARAM_STRING_* constants for details.
  *							The default (0) is to push ASCII.
  * @param cpflags			Whether or not changes should be copied back to the input array.
- *							See SP_PARAM_* constants for details.		
+ *							See SM_PARAM_* constants for details.		
  * @noreturn
  * @error					Called before a call has been started.
  */
@@ -10381,6 +10522,7 @@ enum EngineVersion
 	Engine_Blade,				/**< Blade Symphony */
 	Engine_Insurgency,			/**< Insurgency (2013 Retail version)*/
 	Engine_Contagion,			/**< Contagion */
+	Engine_BlackMesa,			/**< Black Mesa Multiplayer */
 };
 
 #define INVALID_ENT_REFERENCE 0xFFFFFFFF
@@ -10616,7 +10758,7 @@ native PrintToChat(client, const String:format[], any:...);
  */
 stock PrintToChatAll(const String:format[], any:...)
 {
-	decl String:buffer[192];
+	decl String:buffer[254];
 	
 	for (new i = 1; i <= MaxClients; i++)
 	{
@@ -10649,7 +10791,7 @@ native PrintCenterText(client, const String:format[], any:...);
  */
 stock PrintCenterTextAll(const String:format[], any:...)
 {
-	decl String:buffer[192];
+	decl String:buffer[254];
 
 	for (new i = 1; i <= MaxClients; i++)
 	{
@@ -10682,7 +10824,7 @@ native PrintHintText(client, const String:format[], any:...);
  */
 stock PrintHintTextToAll(const String:format[], any:...)
 {
-	decl String:buffer[192];
+	decl String:buffer[254];
 	
 	for (new i = 1; i <= MaxClients; i++)
 	{
@@ -12480,7 +12622,7 @@ enum MenuAction
 /** Default menu actions */
 #define MENU_ACTIONS_DEFAULT	MenuAction_Select|MenuAction_Cancel|MenuAction_End
 /** All menu actions */
-#define MENU_ACTIONS_ALL		MenuAction:0xFFFFFFFF
+#define MENU_ACTIONS_ALL		view_as<MenuAction>(0xFFFFFFFF)
 
 #define MENU_NO_PAGINATION		0		/**< Menu should not be paginated (10 items max) */
 #define MENU_TIME_FOREVER		0		/**< Menu should be displayed as long as possible */
@@ -14457,7 +14599,7 @@ stock int SimpleRegexMatch(const char[] str, const char[] pattern, int flags = 0
 /**
  * Do not edit below this line!
  */
-public Extension:__ext_regex = 
+public Extension __ext_regex = 
 {
 	name = "Regex Extension",
 	file = "regex.ext",
@@ -14773,17 +14915,15 @@ typeset SDKHookCB
  *
  * @param		entity		Entity index
  * @param		classname	Class name
- * @noreturn
  */
-forward OnEntityCreated(entity, const String:classname[]);
+forward void OnEntityCreated(int entity, const char[] classname);
 
 /**
  * @brief When an entity is destroyed
  *
  * @param		entity		Entity index
- * @noreturn
  */
-forward OnEntityDestroyed(entity);
+forward void OnEntityDestroyed(int entity);
 
 /**
  * @brief When the game description is retrieved
@@ -14791,18 +14931,18 @@ forward OnEntityDestroyed(entity);
  * @note  Not supported on ep2v.
  *
  * @param		gameDesc		Game description
- * @noreturn
+ * @return		Plugin_Changed if gameDesc has been edited, else no change.
  */
-forward Action:OnGetGameDescription(String:gameDesc[64]);
+forward Action OnGetGameDescription(char gameDesc[64]);
 
 /**
  * @brief When the level is initialized
  *
  * @param		mapName			Name of the map
  * @param		mapEntities	Entities of the map
- * @noreturn
+ * @return		Plugin_Changed if mapEntities has been edited, else no change.
  */
-forward Action:OnLevelInit(const String:mapName[], String:mapEntities[2097152]);
+forward Action OnLevelInit(const char[] mapName, char mapEntities[2097152]);
 
 /**
  * @brief Hooks an entity
@@ -14810,9 +14950,8 @@ forward Action:OnLevelInit(const String:mapName[], String:mapEntities[2097152]);
  * @param		entity		Entity index
  * @param		type			Type of function to hook
  * @param		callback	Function to call when hook is called
- * @noreturn
  */
-native SDKHook(entity, SDKHookType:type, SDKHookCB:callback);
+native void SDKHook(int entity, SDKHookType type, SDKHookCB callback);
 
 /**
  * @brief Hooks an entity
@@ -14822,7 +14961,7 @@ native SDKHook(entity, SDKHookType:type, SDKHookCB:callback);
  * @param		callback	Function to call when hook is called
  * @return		bool		Hook Successful
  */
-native bool:SDKHookEx(entity, SDKHookType:type, SDKHookCB:callback);
+native bool SDKHookEx(int entity, SDKHookType type, SDKHookCB callback);
 
 /**
  * @brief Unhooks an entity
@@ -14830,9 +14969,8 @@ native bool:SDKHookEx(entity, SDKHookType:type, SDKHookCB:callback);
  * @param    entity   Entity index
  * @param    type     Type of function to unhook
  * @param    callback Callback function to unhook
- * @noreturn
  */
-native SDKUnhook(entity, SDKHookType:type, SDKHookCB:callback);
+native void SDKUnhook(int entity, SDKHookType type, SDKHookCB callback);
 
 /**
  * @brief Applies damage to an entity
@@ -14847,9 +14985,10 @@ native SDKUnhook(entity, SDKHookType:type, SDKHookCB:callback);
  * @param    weapon         Weapon index (orangebox and later) or -1 for unspecified
  * @param    damageForce    Velocity of damage force
  * @param    damagePosition Origin of damage
- * @noreturn
  */
-native SDKHooks_TakeDamage(entity, inflictor, attacker, Float:damage, damageType=DMG_GENERIC, weapon=-1, const Float:damageForce[3]=NULL_VECTOR, const Float:damagePosition[3]=NULL_VECTOR);
+native void SDKHooks_TakeDamage(int entity, int inflictor, int attacker,
+		float damage, int damageType=DMG_GENERIC, int weapon=-1,
+		const float damageForce[3]=NULL_VECTOR, const float damagePosition[3]=NULL_VECTOR);
 
 /**
  * @brief				Forces a client to drop the specified weapon
@@ -14858,15 +14997,15 @@ native SDKHooks_TakeDamage(entity, inflictor, attacker, Float:damage, damageType
  * @param weapon		Weapon entity index.
  * @param vecTarget		Location to toss weapon to, or NULL_VECTOR for default.
  * @param vecVelocity	Velocity at which to toss weapon, or NULL_VECTOR for default.
- * @noreturn
  * @error				Invalid client or weapon entity, weapon not owned by client.
  */
-native SDKHooks_DropWeapon(client, weapon, const Float:vecTarget[3]=NULL_VECTOR, const Float:vecVelocity[3]=NULL_VECTOR);
+native void SDKHooks_DropWeapon(int client, int weapon, const float vecTarget[3]=NULL_VECTOR,
+		const float vecVelocity[3]=NULL_VECTOR);
 
 /**
  * Do not edit below this line!
  */
-public Extension:__ext_sdkhooks = 
+public Extension __ext_sdkhooks = 
 {
 	name = "SDKHooks",
 	file = "sdkhooks.ext",
@@ -15704,6 +15843,15 @@ native SetTeamScore(index, value);
 native GetTeamClientCount(index);
 
 /**
+ * Returns the entity index of a team.
+ *
+ * @param teamIndex		Team index.
+ * @return				Entity index of team.
+ * @error				Invalid team index.
+ */
+native int GetTeamEntity(int teamIndex);
+
+/**
  * Sets the model to a given entity.
  *
  * @param entity			Entity index.
@@ -15775,6 +15923,15 @@ native ActivateEntity(entity);
  * @error				Invalid client index, or client not connected.
  */
 native SetClientInfo(client, const String:key[], const String:value[]);
+
+/**
+ * Changes a client's name.
+ *
+ * @param client		Player's index.
+ * @param name			New name.
+ * @error               Invalid client index, or client not connected.
+ */
+native void SetClientName(int client, const char[] name);
 
 /**
  * Gives ammo of a certain type to a player.
@@ -16272,6 +16429,48 @@ native EmitSound(const clients[],
 				 any:...);
 
 /**
+ * Emits a sound or game sound to a list of clients using the latest version of the engine sound interface.
+ * This native is only available in engines that are greater than or equal to Portal 2.
+ *
+ * @param clients		Array of client indexes.
+ * @param numClients	Number of clients in the array.
+ * @param soundEntry	Sound entry name.
+ * @param sample		Sound file name relative to the "sounds" folder.
+ * @param entity		Entity to emit from.
+ * @param channel		Channel to emit with.
+ * @param level			Sound level.
+ * @param seed			Sound seed.
+ * @param flags			Sound flags.
+ * @param volume		Sound volume.
+ * @param pitch			Sound pitch.
+ * @param speakerentity	Unknown.
+ * @param origin		Sound origin.
+ * @param dir			Sound direction.
+ * @param updatePos		Unknown (updates positions?)
+ * @param soundtime		Alternate time to play sound for.
+ * @param ...			Optional list of Float[3] arrays to specify additional origins.
+ * @noreturn
+ * @error				Invalid client index.
+ */
+native EmitSoundEntry(const clients[],
+				 numClients,
+				 const String:soundEntry[],
+				 const String:sample[],
+				 entity = SOUND_FROM_PLAYER,
+				 channel = SNDCHAN_AUTO,
+				 level = SNDLEVEL_NORMAL,
+				 seed = 0,
+				 flags = SND_NOFLAGS,
+				 Float:volume = SNDVOL_NORMAL,
+				 pitch = SNDPITCH_NORMAL,
+				 speakerentity = -1,
+				 const Float:origin[3] = NULL_VECTOR,
+				 const Float:dir[3] = NULL_VECTOR,
+				 bool:updatePos = true,
+				 Float:soundtime = 0.0,
+				 any:...);
+
+/**
  * Emits a sentence to a list of clients.
  *
  * @param clients		Array of client indexes.
@@ -16357,6 +16556,8 @@ typedef AmbientSHook = function Action (
  * @param level			Sound level.
  * @param pitch			Sound pitch.
  * @param flags			Sound flags.
+ * @param soundEntry		Game sound entry name. (Used in engines newer than Portal 2)
+ * @param seed			Sound seed. (Used in engines newer than Portal 2)
  * @return			Plugin_Continue to allow the sound to be played, Plugin_Stop to block it, 
  *				  Plugin_Changed when any parameter has been modified.
  */
@@ -16369,7 +16570,9 @@ typedef NormalSHook = function Action (
   float &volume,
   int &level,
   int &pitch,
-  int &flags
+  int &flags,
+  char soundEntry[PLATFORM_MAX_PATH],
+  int &seed
 );
 
 /**
@@ -17227,7 +17430,24 @@ stock TE_SendToClient(client, Float:delay=0.0)
 
 	return TE_Send(players, 1, delay);
 }
+
 /**
+ * Sends the current TE to all clients that are in 
+ * visible or audible range of the origin.
+ * @note See TE_Start().
+ * @note See GetClientsInRange()
+ *
+ * @param origin		Coordinates from which to test range.
+ * @param rangeType		Range type to use for filtering clients.
+ * @param delay			Delay in seconds to send the TE.
+ * @noreturn
+ */
+stock TE_SendToAllInRange(float origin[3], ClientRangeType rangeType, float delay=0.0)
+{
+	int[] clients = new int[MaxClients];
+	int total = GetClientsInRange(origin, rangeType, clients, MaxClients);
+	return TE_Send(clients, total, delay);
+}/**
  * vim: set ts=4 :
  * =============================================================================
  * SourceMod (C)2004-2008 AlliedModders LLC.  All rights reserved.
@@ -18453,10 +18673,6 @@ enum APLRes
  * If any run-time error is thrown during this callback, the plugin will be marked 
  * as failed.
  *
- * It is not necessary to close any handles or remove hooks in this function.  
- * SourceMod guarantees that plugin shutdown automatically and correctly releases 
- * all resources.
- *
  * @noreturn
  */
 forward void OnPluginStart();
@@ -18492,6 +18708,10 @@ forward APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 
 /**
  * Called when the plugin is about to be unloaded.
+ *
+ * It is not necessary to close any handles or remove hooks in this function.  
+ * SourceMod guarantees that plugin shutdown automatically and correctly releases 
+ * all resources.
  *
  * @noreturn
  */
@@ -19004,8 +19224,7 @@ enum NumberType
 
 enum Address
 {
-    Address_Null = 0,              //a typical invalid result when an address lookup fails
-    Address_MinimumValid = 0x10000 //addresses below this value are considered invalid to use for Load/Store
+    Address_Null = 0,              // a typical invalid result when an address lookup fails
 };
 
 /**
@@ -20298,32 +20517,26 @@ native TF2_RemoveWearable(client, wearable);
  *
  * @param client		Index of the client to which the conditon is being added.
  * @param condition     Condition that is being added.
- * @noreturn
  */
-forward TF2_OnConditionAdded(client, TFCond:condition);
+forward void TF2_OnConditionAdded(client, TFCond:condition);
 
 /**
  * Called after a condition is removed from a player
  *
  * @param client		Index of the client to which the condition is being removed.
  * @param condition		Condition that is being removed.
- * @noreturn
  */
-forward TF2_OnConditionRemoved(client, TFCond:condition);
+forward void TF2_OnConditionRemoved(client, TFCond:condition);
 
 /**
  * Called when the server enters the Waiting for Players round state
- *
- * @noreturn
  */
-forward TF2_OnWaitingForPlayersStart();
+forward void TF2_OnWaitingForPlayersStart();
 
 /**
  * Called when the server exits the Waiting for Players round state
- *
- * @noreturn
  */
-forward TF2_OnWaitingForPlayersEnd();
+forward void TF2_OnWaitingForPlayersEnd();
 
 /**
  * Called when a player attempts to use a teleporter to decide if the player should be allowed to teleport.
@@ -20384,7 +20597,7 @@ public __ext_tf2_SetNTVOptional()
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, version 3.0, as published by the
  * Free Software Foundation.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
@@ -20637,7 +20850,7 @@ enum
 	TFWeaponSlot_Building,
 	TFWeaponSlot_PDA,
 	TFWeaponSlot_Item1,
-	TFWeaponSlot_Item2	
+	TFWeaponSlot_Item2
 };
 
 // Identifiers for the eventtype property on the teamplay_flag_event event
@@ -20654,12 +20867,12 @@ enum TFResourceType
 	TFResource_Ping,
 	TFResource_Score,
 	TFResource_Deaths,
-	TFResource_TotalScore, 
+	TFResource_TotalScore,
 	TFResource_Captures,
 	TFResource_Defenses,
 	TFResource_Dominations,
 	TFResource_Revenge,
-	TFResource_BuildingsDestroyed, 
+	TFResource_BuildingsDestroyed,
 	TFResource_Headshots,
 	TFResource_Backstabs,
 	TFResource_HealPoints,
@@ -20695,7 +20908,7 @@ static const String:TFResourceNames[TFResourceType][] =
 
 /**
  * Gets a client's current team.
- * 
+ *
  * @param client		Client index.
  * @return				Current TFTeam of client.
  * @error				Invalid client index.
@@ -20703,6 +20916,19 @@ static const String:TFResourceNames[TFResourceType][] =
 stock TFTeam:TF2_GetClientTeam(client)
 {
 	return TFTeam:GetClientTeam(client);
+}
+
+/**
+ * Changes a client's current team.
+ *
+ * @param client        Client index.
+ * @param team          TFTeam team symbol.
+ * @noreturn
+ * @error               Invalid client index.
+ */
+stock TF2_ChangeClientTeam(client, TFTeam:team)
+{
+    ChangeClientTeam(client, _:team);
 }
 
 /**
@@ -20732,7 +20958,7 @@ stock TFClassType:TF2_GetPlayerClass(client)
 stock TF2_SetPlayerClass(client, TFClassType:classType, bool:weapons=true, bool:persistent=true)
 {
 	SetEntProp(client, Prop_Send, "m_iClass", _:classType);
-	
+
 	if (persistent)
 	{
 		SetEntProp(client, Prop_Send, "m_iDesiredPlayerClass", _:classType);
@@ -20752,23 +20978,23 @@ stock TF2_GetPlayerResourceData(client, TFResourceType:type)
 {
 	if (!IsClientConnected(client))
 	{
-		return -1;	
+		return -1;
 	}
-	
+
 	new offset = FindSendPropInfo("CTFPlayerResource", TFResourceNames[type]);
-	
+
 	if (offset < 1)
 	{
-		return -1;	
+		return -1;
 	}
-	
+
 	new entity = TF2_GetResourceEntity();
-	
+
 	if (entity == -1)
 	{
 		return -1;
 	}
-	
+
 	return GetEntData(entity, offset + (client*4));
 }
 
@@ -20788,26 +21014,26 @@ stock bool:TF2_SetPlayerResourceData(client, TFResourceType:type, any:value)
 {
 	if (!IsClientConnected(client))
 	{
-		return false;	
+		return false;
 	}
-	
+
 	new offset = FindSendPropInfo("CTFPlayerResource", TFResourceNames[type]);
-	
+
 	if (offset < 1)
 	{
-		return false;	
+		return false;
 	}
-	
+
 	new entity = TF2_GetResourceEntity();
-	
+
 	if (entity == -1)
 	{
-		return false;	
+		return false;
 	}
-	
+
 	SetEntData(entity, offset + (client*4), value);
-	
-	return true;	
+
+	return true;
 }
 
 /**
@@ -20885,7 +21111,7 @@ stock bool:TF2_IsPlayerInCondition(client, TFCond:cond)
 		{
 			return true;
 		}
-		
+
 		if ((GetEntProp(client, Prop_Send, "_condition_bits") & bit) == bit)
 		{
 			return true;
@@ -20915,7 +21141,7 @@ stock bool:TF2_IsPlayerInCondition(client, TFCond:cond)
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -20929,12 +21155,12 @@ stock bool:TF2_IsPlayerInCondition(client, TFCond:cond)
 stock TFObjectType:TF2_GetObjectType(entity)
 {
 	new offset = GetEntSendPropOffs(entity, "m_iObjectType");
-	
+
 	if (offset <= 0)
 	{
 		ThrowError("Entity index %d is not an object", entity);
 	}
-	
+
 	return TFObjectType:GetEntData(entity, offset);
 }
 
@@ -20948,12 +21174,12 @@ stock TFObjectType:TF2_GetObjectType(entity)
 stock TFObjectMode:TF2_GetObjectMode(entity)
 {
 	new offset = GetEntSendPropOffs(entity, "m_iObjectMode");
-	
+
 	if (offset <= 0)
 	{
 		ThrowError("Entity index %d is not an object", entity);
 	}
-	
+
 	return TFObjectMode:GetEntData(entity, offset);
 }
 /**
@@ -21054,6 +21280,7 @@ native Handle:CreateTimer(Float:interval, Timer:func, any:data=INVALID_HANDLE, f
  * @param autoClose			If autoClose is true, the data that was passed to CreateTimer() will
  *							be closed as a handle if TIMER_DATA_HNDL_CLOSE was not specified.
  * @noreturn
+ * @error				Invalid handles will cause a run time error.
  */
 native KillTimer(Handle:timer, bool:autoClose=false);
 
@@ -21297,7 +21524,7 @@ enum TopMenuObject:
  * @noreturn
  */
 typedef TopMenuHandler = function void (
-  Handle topmenu, 
+  TopMenu topmenu, 
   TopMenuAction action,
   TopMenuObject topobj_id,
   int param,
@@ -21575,7 +21802,7 @@ native void SetTopMenuTitleCaching(Handle topmenu, bool cache_titles);
 /**
  * Do not edit below this line!
  */
-public Extension:__ext_topmenus = 
+public Extension __ext_topmenus = 
 {
 	name = "TopMenus",
 	file = "topmenus.ext",
@@ -22098,10 +22325,10 @@ stock MakeVectorFromPoints(const Float:pt1[3], const Float:pt2[3], Float:output[
 #define SOURCEMOD_V_REV			0
 #define SOURCEMOD_V_CSET		"0"
 #define SOURCEMOD_V_MAJOR		1				/**< SourceMod Major version */
-#define SOURCEMOD_V_MINOR		7				/**< SourceMod Minor version */
+#define SOURCEMOD_V_MINOR		8				/**< SourceMod Minor version */
 #define SOURCEMOD_V_RELEASE		0				/**< SourceMod Release version */
 
-#define SOURCEMOD_VERSION	"1.7.0-manual"	/**< SourceMod version string (major.minor.release-tag) */
+#define SOURCEMOD_VERSION	"1.8.0-manual"	/**< SourceMod version string (major.minor.release-tag) */
 #endif
 /**
  * vim: set ts=4 :
