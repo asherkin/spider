@@ -1,16 +1,16 @@
 // Nextra
 translations['de'] = [
-  "Sorry, your browser is not supported.",
+  "Dein Browser wird leider nicht unterstützt.",
   "Spider hat ein Update erhalten.",
   "Aktualisiere die Seite um die neue Version zu laden.",
   "Die letzte Sitzung wurde wiederhergestellt.",
-  "Stattdessen reinen Tisch machen?",
+  "Stattdessen von neuem beginnen?",
   "Light",
   "Dark",
-  "Full Screen",
+  "Vollbild",
   "Kompilieren",
   "Herunterladen",
   "Verschiebe", "Dateien hierher",
   "Erstellt von",
-  "Angetrieben von", "und",
+  "Unterstützt durch", "und",
 ];
