@@ -323,15 +323,16 @@
 
           if (filename.match(/\.sp$/)) {
             spcompSetup();
+            outputFile = filename.replace(/\.sp$/, '.smx');
           } else if (filename.match(/\.sma$/)) {
             amxxpcSetup();
+            outputFile = filename.replace(/\.sma$/, '.amxx');
           }
-
-          outputFile = filename;
         }
       }
 
       compileButton.disabled = false;
+      compileButton.click();
     }
 
     xhr.open('GET', 'https://users.alliedmods.net/~asherkin/attachment.php?id=' + location.hash.slice(1), true);
