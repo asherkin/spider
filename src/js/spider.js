@@ -185,11 +185,12 @@
   };
 
   var spcompTemplate = [
-    '#pragma semicolon 1',
-    '',
     '#include <sourcemod>',
     '',
-    'public Plugin:myinfo = {',
+    '#pragma semicolon 1',
+    '#pragma newdecls required',
+    '',
+    'public Plugin myinfo = {',
     '\tname        = "",',
     '\tauthor      = "",',
     '\tdescription = "",',
@@ -197,7 +198,7 @@
     '\turl         = ""',
     '};',
     '',
-    'public OnPluginStart()',
+    'public void OnPluginStart()',
     '{',
     '\tPrintToServer("Hello, World!");',
     '}',
@@ -205,9 +206,9 @@
   ].join('\n');
 
   var amxxpcTemplate = [
-    '#pragma semicolon 1',
-    '',
     '#include <amxmodx>',
+    '',
+    '#pragma semicolon 1',
     '',
     'new PLUGIN[]  = "";',
     'new AUTHOR[]  = "";',
