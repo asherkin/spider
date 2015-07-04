@@ -315,6 +315,7 @@
       }
 
       input.setValue(this.responseText, -1);
+      localStorage['input-file'] = this.responseText;
 
       var filename = this.getResponseHeader('Content-Disposition');
       if (filename) {
@@ -325,15 +326,16 @@
           if (filename.match(/\.sp$/)) {
             spcompSetup();
             outputFile = filename.replace(/\.sp$/, '.smx');
+            compile();
           } else if (filename.match(/\.sma$/)) {
             amxxpcSetup();
             outputFile = filename.replace(/\.sma$/, '.amxx');
+            compile();
           }
         }
       }
 
       compileButton.disabled = false;
-      compileButton.click();
     }
 
     xhr.open('GET', 'https://users.alliedmods.net/~asherkin/attachment.php?id=' + location.hash.slice(1), true);
