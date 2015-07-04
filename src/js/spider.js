@@ -334,7 +334,7 @@
       compileButton.disabled = false;
     }
 
-    xhr.open('GET', 'http://users.alliedmods.net/~asherkin/attachment.php?id=' + location.hash.slice(1), true);
+    xhr.open('GET', 'https://users.alliedmods.net/~asherkin/attachment.php?id=' + location.hash.slice(1), true);
     xhr.send();
   }
 
