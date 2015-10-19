@@ -47,7 +47,7 @@ var Module;
         FS.createPath('/', path);
       }
 
-      FS.createDataFile('/' + path, filename, source, true, true);
+      FS.writeFile('/' + path + '/' + filename, source);
     }
 
     shouldRunNow = true;
