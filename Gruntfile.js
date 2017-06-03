@@ -13,7 +13,7 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['js/worker.js'],
+          src: ['js/worker.js', 'js/run-worker.js'],
           dest: 'build/',
         }, {
           src: ['src/js/ace/ace.js', 'src/js/ace/**/*.js', 'src/js/FileSaver.js', 'src/js/translations/en.js', 'src/js/translations/**/*.js', 'src/js/spider.js'],
@@ -51,7 +51,7 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['favicon.ico', 'robots.txt', 'js/spcomp/*', 'js/amxxpc/*'],
+          src: ['favicon.ico', 'robots.txt', 'js/spcomp/*', 'js/amxxpc/*', 'js/sourcepawn-js.js'],
           dest: 'build/',
         }],
       },

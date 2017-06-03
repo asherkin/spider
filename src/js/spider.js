@@ -131,6 +131,7 @@
 
   var compileButton = document.getElementById('compile');
   var downloadButton = document.getElementById('download');
+  var runButton = document.getElementById('run');
 
   var includes = document.getElementById('includes');
   var includeDrop = document.getElementById('include-drop');
@@ -224,7 +225,7 @@
   ].join('\n');
 
   var compiler, template, inputFile, outputFile;
-  var worker, compiled;
+  var worker, compiled, runWorker;
 
   function spcompSetup() {
     if (compiler === 'spcomp') {
@@ -247,9 +248,22 @@
     worker = new Worker('js/worker.js');
     worker.postMessage(compiler);
 
+    if (runWorker) {
+      runWorker.terminate();
+    }
+
+    output.textContent = '';
+    input.getSession().clearAnnotations();
+
     compiled = undefined;
     downloadButton.disabled = true;
-    output.textContent = '';
+    runButton.disabled = true;
+
+    downloadButton.classList.add('col-xs-9');
+    downloadButton.classList.add('col-lg-10');
+    downloadButton.classList.remove('col-xs-12');
+    downloadButton.classList.remove('dropdown-toggle');
+    runButton.classList.remove('hidden');
 
     amxxpcButton.classList.remove('active');
     spcompButton.classList.add('active');
@@ -276,9 +290,22 @@
     worker = new Worker('js/worker.js');
     worker.postMessage(compiler);
 
+    if (runWorker) {
+      runWorker.terminate();
+    }
+
+    output.textContent = '';
+    input.getSession().clearAnnotations();
+
     compiled = undefined;
     downloadButton.disabled = true;
-    output.textContent = '';
+    runButton.disabled = true;
+
+    downloadButton.classList.remove('col-xs-9');
+    downloadButton.classList.remove('col-lg-10');
+    downloadButton.classList.add('col-xs-12');
+    downloadButton.classList.add('dropdown-toggle');
+    runButton.classList.add('hidden');
 
     spcompButton.classList.remove('active');
     amxxpcButton.classList.add('active');
@@ -431,9 +458,12 @@
         includes.removeChild(includes.firstChild);
       }
 
+      output.textContent = '';
+      input.getSession().clearAnnotations();
+
       compiled = undefined;
       downloadButton.disabled = true;
-      output.textContent = '';
+      runButton.disabled = true;
 
       return false;
     };
@@ -578,7 +608,7 @@
       worker.postMessage(compiler);
     }
 
-    worker.onmessage = handle;
+    worker.onmessage = handleCompileMessage;
 
     var sources = [];
     //var buffers = [];
@@ -611,7 +641,7 @@
     worker.postMessage(sources/*, buffers*/);
   }
 
-  function handle(event) {
+  function handleCompileMessage(event) {
     if (typeof event.data === 'string') {
       output.textContent += event.data + '\r\n';
 
@@ -637,6 +667,7 @@
     if (event.data !== false) {
       compiled = event.data;
       downloadButton.disabled = false;
+      runButton.disabled = false;
     }
 
     worker.terminate();
@@ -644,18 +675,66 @@
     worker.postMessage(compiler);
   }
 
+  function run() {
+    if (runWorker) {
+      runWorker.terminate();
+    }
+
+    runWorker = new Worker('js/run-worker.js');
+    runWorker.onmessage = handleRunMessage;
+    runWorker.postMessage(compiled);
+  }
+
+  var lastException = '';
+  function handleRunMessage(event) {
+    if (typeof event.data !== 'string') {
+      return;
+    }
+
+    output.textContent += event.data + '\r\n';
+
+    var exception = event.data.match(/^Exception thrown: (.+)/);
+    if (exception) {
+      lastException = exception[1];
+      return;
+    }
+
+    var message = event.data.match(/^  \[\d+\] plugin\.(?:sma|sp)::[^,]+, line (\d+)/);
+    if (!message) {
+      return;
+    }
+
+    var annotations = input.getSession().getAnnotations();
+
+    annotations.push({
+      column: 0,
+      row: message[1] - 1,
+      text: lastException,
+      type: 'error',
+    });
+
+    input.getSession().setAnnotations(annotations);
+  }
+
   compileButton.onclick = function() {
     compiled = undefined;
     downloadButton.disabled = true;
+    runButton.disabled = true;
+
+    if (runWorker) {
+      runWorker.terminate();
+    }
 
     output.textContent = '';
     input.getSession().clearAnnotations();
+
     compile();
   };
 
   downloadButton.onclick = function() {
     if (!compiled) {
       downloadButton.disabled = true;
+      runButton.disabled = true;
       return;
     }
 
@@ -663,4 +742,25 @@
 
     saveAs(blob, outputFile);
   };
+
+  runButton.onclick = function() {
+    if (!compiled) {
+      downloadButton.disabled = true;
+      runButton.disabled = true;
+      return;
+    }
+
+    output.textContent = '';
+    input.getSession().clearAnnotations();
+
+    run();
+  };
+
+  input.commands.addCommand({
+    name: 'compile',
+    bindKey: { win: 'Ctrl-S', mac: 'Cmd-S' },
+    exec: function(editor) {
+      compileButton.onclick();
+    }
+  });
 })();

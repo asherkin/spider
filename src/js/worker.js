@@ -6,6 +6,7 @@ var Module;
   Module = {
     noInitialRun: true,
     print: print,
+    printErr: print,
     arguments: ['-iextra', '-iinclude'],
   };
 

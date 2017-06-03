@@ -40,12 +40,12 @@
       </script>
     </div>
     <div class="container-fluid">
-      <div id="col-editor" class="col-sm-7">
+      <div id="col-editor" class="col-sm-6 col-md-7">
         <div id="gutter"></div>
         <pre id="input"></pre>
       </div>
       <div id="expando"></div>
-      <div id="col-sidebar" class="col-sm-5">
+      <div id="col-sidebar" class="col-sm-6 col-md-5">
         <div id="update-alert" class="alert alert-success alert-dismissible hide">
           <button type="button" class="close">&times;</button>
           <span class="trans">Spider has been updated.</span>
@@ -89,7 +89,10 @@
             <button type="button" id="compile" class="trans btn btn-primary btn-block btn-lg">Compile</button>
           </div>
           <div class="col-xs-6">
-            <button type="button" id="download" class="trans btn btn-default btn-block btn-lg" disabled>Download</button>
+            <div class="btn-group btn-block">
+              <button type="button" id="download" class="trans btn btn-default btn-lg col-xs-9 col-lg-10" disabled>Download</button>
+              <button type="button" id="run" title="Run" class="btn btn-success btn-lg col-xs-3 col-lg-2 dropdown-toggle" disabled>&#9658;</button>
+            </div>
           </div>
         </div>
         <ul id="includes" class="list-group">
