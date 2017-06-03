@@ -180,12 +180,24 @@ onmessage = function(event) {
     return;
   }
 
-  Module._free(strFilename);
-
-  var printToServerNative = CreateAndBindNative(spRuntime, 'PrintToServer', function(ctx, args) {
+  CreateAndBindNative(spRuntime, 'PrintToServer', function(ctx, args) {
     var format = Module.Pointer_stringify(Module._context_local_to_physical_address(ctx, args[0]));
     var result = atcprintf(format, ctx, args.slice(1));
     Module.print(result);
+  });
+
+  CreateAndBindNative(spRuntime, 'Format', function(ctx, args) {
+    var format = Module.Pointer_stringify(Module._context_local_to_physical_address(ctx, args[2]));
+    var result = atcprintf(format, ctx, args.slice(3));
+    var dest = Module._context_local_to_physical_address(ctx, args[0]);
+    return Module.stringToUTF8(result, dest, args[1]);
+  });
+
+  CreateAndBindNative(spRuntime, 'FormatEx', function(ctx, args) {
+    var format = Module.Pointer_stringify(Module._context_local_to_physical_address(ctx, args[2]));
+    var result = atcprintf(format, ctx, args.slice(3));
+    var dest = Module._context_local_to_physical_address(ctx, args[0]);
+    return Module.stringToUTF8(result, dest, args[1]);
   });
 
   var strFunctionName = Module.allocate(Module.intArrayFromString('OnPluginStart'), 'i8', Module.ALLOC_NORMAL);

@@ -685,7 +685,7 @@
     runWorker.postMessage(compiled);
   }
 
-  var lastException = '';
+  var lastException = null;
   function handleRunMessage(event) {
     if (typeof event.data !== 'string') {
       return;
@@ -700,7 +700,7 @@
     }
 
     var message = event.data.match(/^  \[\d+\] plugin\.(?:sma|sp)::[^,]+, line (\d+)/);
-    if (!message) {
+    if (!lastException || !message) {
       return;
     }
 
@@ -714,6 +714,9 @@
     });
 
     input.getSession().setAnnotations(annotations);
+
+    // Only annotate the exit point from the plugin.
+    lastException = null;
   }
 
   compileButton.onclick = function() {
