@@ -16,6 +16,9 @@ module.exports = function(grunt) {
           src: ['js/worker.js', 'js/run-worker.js'],
           dest: 'build/',
         }, {
+          src: ['src/js/natives/**/*.js'],
+          dest: 'build/js/natives.js',
+        }, {
           src: ['src/js/ace/ace.js', 'src/js/ace/**/*.js', 'src/js/FileSaver.js', 'src/js/translations/en.js', 'src/js/translations/**/*.js', 'src/js/spider.js'],
           dest: 'build/js/spider.js',
         }],

@@ -140,9 +140,7 @@ function atcprintf(format, ctx, params) {
             return _formatBaseX(value, 10, leftJustify, minWidth, precision, zeroPad);
           case 'i':
           case 'd':
-            var number = +value || 0;
-            // Plain Math.round doesn't just truncate
-            number = Math.round(number - number % 1);
+            var number = +value | 0;
             var prefix = number < 0 ? '-' : '';
             value = prefix + _pad(String(Math.abs(number)), precision, '0', false);
             return _justify(value, prefix, leftJustify, minWidth, zeroPad);
@@ -180,25 +178,9 @@ onmessage = function(event) {
     return;
   }
 
-  CreateAndBindNative(spRuntime, 'PrintToServer', function(ctx, args) {
-    var format = Module.Pointer_stringify(Module._context_local_to_physical_address(ctx, args[0]));
-    var result = atcprintf(format, ctx, args.slice(1));
-    Module.print(result);
-  });
-
-  CreateAndBindNative(spRuntime, 'Format', function(ctx, args) {
-    var format = Module.Pointer_stringify(Module._context_local_to_physical_address(ctx, args[2]));
-    var result = atcprintf(format, ctx, args.slice(3));
-    var dest = Module._context_local_to_physical_address(ctx, args[0]);
-    return Module.stringToUTF8(result, dest, args[1]);
-  });
-
-  CreateAndBindNative(spRuntime, 'FormatEx', function(ctx, args) {
-    var format = Module.Pointer_stringify(Module._context_local_to_physical_address(ctx, args[2]));
-    var result = atcprintf(format, ctx, args.slice(3));
-    var dest = Module._context_local_to_physical_address(ctx, args[0]);
-    return Module.stringToUTF8(result, dest, args[1]);
-  });
+  self.spRuntime = spRuntime;
+  importScripts('natives.js');
+  delete self.spRuntime;
 
   var strFunctionName = Module.allocate(Module.intArrayFromString('OnPluginStart'), 'i8', Module.ALLOC_NORMAL);
 
