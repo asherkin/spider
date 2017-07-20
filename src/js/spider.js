@@ -400,12 +400,12 @@
       close.type = 'button';
       close.classList.add('close');
       close.textContent = '\u00D7';
-      close.onclick = (function() {
+      close.onclick = (function(filename, li) {
         return (function() {
           delete localStorage[filename];
           includes.removeChild(li);
         });
-      })();
+      })(filename, li);
 
       var display = document.createElement('ol');
 
