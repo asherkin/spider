@@ -391,7 +391,7 @@
 
   if (savedIncludes.length > 0) {
     for (var i = 0; i < savedIncludes.length; ++i) {
-      var filename = savedIncludes[i];
+      var filepath = savedIncludes[i];
 
       var li = document.createElement('li');
       li.classList.add('list-group-item');
@@ -402,14 +402,14 @@
       close.textContent = '\u00D7';
       close.onclick = (function() {
         return (function() {
-          delete localStorage[filename];
+          delete localStorage[filepath];
           includes.removeChild(li);
         });
       })();
 
       var display = document.createElement('ol');
 
-      filename = filename.split('/');
+      var filename = filepath.split('/');
       filename.shift();
 
       if (filename[0] === 'extra') {
