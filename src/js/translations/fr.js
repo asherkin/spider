@@ -1,6 +1,6 @@
 // Arkshine, ANTICHRISTUS
 translations['fr'] = [
-  "Sorry, your browser is not supported.",
+  "Désolé, votre navigateur n'est pas pris en charge.",
   "Spider a été mis à jour.",
   "Rafraîchir la page pour charger la nouvelle version.",
   "Votre dernière session a été restaurée.",
