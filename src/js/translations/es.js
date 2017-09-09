@@ -1,0 +1,15 @@
+translations['es'] = [
+  "Lo siento, su navegador no es compatible.",
+  "Spider ha sido actualizada.",
+  "Recargar la página para cargar la versión nueva.",
+  "Su última sesión ha sido restaurada.",
+  "¿Quiere borrón y cuenta nueva?",
+  "Claro",
+  "Sombra",
+  "Pantalla Completa",
+  "Compilar",
+  "Descargar",
+  "Dejar caer", "archivos aquí",
+  "Creado por",
+  "Propulsado por", "y",
+];
