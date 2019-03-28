@@ -13,6 +13,13 @@
     "email": "asherkin@limetech.org",
     "url": "https://limetech.org/"
   },
+  "contributors": [
+    {
+      "name": "Alex Blackham (B3none)",
+      "email": "ablackham2000@gmail.com",
+      "url": "https://github.com/b3none"
+    }
+  ],
   "devDependencies": {
     "grunt": "~0.4.5",
     "grunt-appcache": "~0.1.8",

@@ -20,21 +20,24 @@
               !!window.Blob && !!window.FileReader &&
               (('download' in document.createElement('a')) || !!navigator.msSaveBlob)) {
             container.classList.add('hide');
-          } else {
-            var banner = container.firstChild;
-            var button = banner.lastChild;
 
-            button.classList.remove('hide');
-            button.onclick = function() {
-              container.classList.add('hide');
-            };
-
-            function resize() {
-              banner.style.marginTop = '-' + (parseInt(getComputedStyle(banner).height, 10) / 2) + 'px';
-            };
-            window.onresize = resize;
-            resize();
+            return;
           }
+
+          var banner = container.firstChild;
+          var button = banner.lastChild;
+
+          button.classList.remove('hide');
+          button.onclick = function() {
+            container.classList.add('hide');
+          };
+
+          function resize() {
+            banner.style.marginTop = '-' + (parseInt(getComputedStyle(banner).height, 10) / 2) + 'px';
+          }
+
+          window.onresize = resize;
+          resize();
         })();
       </script>
     </div>
