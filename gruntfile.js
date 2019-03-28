@@ -63,7 +63,7 @@ module.exports = grunt => {
               'robots.txt',
               'js/spcomp/*',
               'js/amxxpc/*',
-              'js/sourcepawn-js.js'
+              'js/sourcepawn.js'
           ],
           dest: 'build/',
         }],

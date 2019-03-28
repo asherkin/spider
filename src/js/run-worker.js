@@ -14,7 +14,7 @@ var Module = {
   },
 };
 
-importScripts('sourcepawn-js.js');
+importScripts('sourcepawn.js');
 
 function CreateAndBindNative(runtime, name, func) {
   var strNativeName = Module.allocate(Module.intArrayFromString(name), 'i8', Module.ALLOC_NORMAL);
