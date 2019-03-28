@@ -1,10 +1,12 @@
-module.exports = function(grunt) {
+module.exports = grunt => {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
     clean: {
       build: {
-        src: ['build/'],
+        src: [
+            'build/'
+        ],
       },
     },
 
@@ -43,7 +45,9 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['index.html'],
+          src: [
+              'index.html'
+          ],
           dest: 'build/',
         }],
       },
@@ -54,7 +58,13 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['favicon.ico', 'robots.txt', 'js/spcomp/*', 'js/amxxpc/*', 'js/sourcepawn-js.js'],
+          src: [
+              'favicon.ico',
+              'robots.txt',
+              'js/spcomp/*',
+              'js/amxxpc/*',
+              'js/sourcepawn-js.js'
+          ],
           dest: 'build/',
         }],
       },
@@ -67,7 +77,8 @@ module.exports = function(grunt) {
         },
         dest: 'build/spider.appcache',
         cache: {
-          patterns: ['build/**/*', '!build/index.html', '!build/robots.txt'],
+          patterns: [
+              'build/**/*', '!build/index.html', '!build/robots.txt'],
         },
         network: ['https://users.alliedmods.net/~asherkin/attachment.php'],
       },
@@ -82,9 +93,7 @@ module.exports = function(grunt) {
         files: [{
           expand: true,
           src: 'build/**/*',
-          rename: function(dest, src) {
-            return src + '.gz';
-          },
+          rename: (dest, src) => src + '.gz',
         }],
       },
     },
@@ -95,11 +104,9 @@ module.exports = function(grunt) {
           port: 0,
           base: 'build/',
           open: true,
-          middleware: function(connect, options, middlewares) {
+          middleware: (connect, options, middlewares) => {
             middlewares.unshift(connect.compress({
-              filter: function(req, res) {
-                return true;
-              }
+              filter: () => true
             }));
             return middlewares;
           },
@@ -109,7 +116,7 @@ module.exports = function(grunt) {
 
     watch: {
       build: {
-        files: ['Gruntfile.js', 'src/**/*'],
+        files: ['gruntfile.js', 'src/**/*'],
         tasks: ['newer:uglify:build', 'newer:cssmin:build', 'newer:htmlmin:build', 'newer:copy:build'],
       },
     },
@@ -129,4 +136,4 @@ module.exports = function(grunt) {
   grunt.registerTask('build', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy']);
   grunt.registerTask('default', ['build', 'appcache', 'compress']);
   grunt.registerTask('serve', ['build', 'connect', 'watch']);
-}
+};
