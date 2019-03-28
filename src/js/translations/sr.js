@@ -12,5 +12,6 @@ translations['sr'] = [
   "Preuzimanje",
   "Prenesite", "fajlove ovde",
   "Razvio",
-  "Omogućili:", "i",
+  "Omogućili:",
+  "i",
 ];

@@ -12,5 +12,6 @@ translations['de'] = [
   "Herunterladen",
   "Verschiebe", "Dateien hierher",
   "Erstellt von",
-  "Unterstützt durch", "und",
+  "Unterstützt durch",
+  "und",
 ];

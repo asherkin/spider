@@ -12,5 +12,6 @@ translations['ro'] = [
   "Descarca",
   "Pune", "fisierele aici",
   "Creat de",
-  "Powered by", "si",
+  "Powered by",
+  "si",
 ];

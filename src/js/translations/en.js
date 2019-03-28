@@ -13,5 +13,6 @@ translations['en'] = [
   "Download",
   "Drop", "files here",
   "Created by",
-  "Powered by", "and",
+  "Powered by",
+  "and",
 ];

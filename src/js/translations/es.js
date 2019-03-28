@@ -11,5 +11,6 @@ translations['es'] = [
   "Descargar",
   "Dejar caer", "archivos aquí",
   "Creado por",
-  "Propulsado por", "y",
+  "Propulsado por",
+  "y",
 ];
