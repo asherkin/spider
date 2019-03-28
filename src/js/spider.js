@@ -1,10 +1,10 @@
-(function(){
+(function () {
   'use strict';
 
   var currentLanguage = 'en';
   var languageReset = document.getElementById('lang-reset');
 
-  languageReset.onclick = function() {
+  languageReset.onclick = function () {
     setLanguage('en');
     return false;
   };
@@ -33,7 +33,7 @@
       }
 
       translatables[i].textContent = translations[lang][index];
-    };
+    }
 
     if (lang !== 'en') {
       languageReset.classList.remove('hide');
@@ -48,7 +48,7 @@
 
   if (navigator.languages) {
     var i;
-    for (i = 0; i < navigator.languages.length; ++i) {
+    for (var i = 0; i < navigator.languages.length; ++i) {
       var lang = navigator.languages[i].substr(0, 2);
 
       if (translations[lang]) {
@@ -73,7 +73,7 @@
     notice.classList.remove('hide');
 
     var reload = notice.getElementsByClassName('alert-link')[0];
-    reload.onclick = function() {
+    reload.onclick = function () {
       location.reload();
       return false;
     };
@@ -81,12 +81,12 @@
 
   applicationCache.onupdateready = showUpdateNotice;
 
-  if(applicationCache.status === applicationCache.UPDATEREADY) {
+  if (applicationCache.status === applicationCache.UPDATEREADY) {
     showUpdateNotice();
   }
 
-  setInterval(function() {
-    if(navigator.onLine && (applicationCache.status === applicationCache.IDLE || applicationCache.status === applicationCache.UPDATEREADY)) {
+  setInterval(function () {
+    if (navigator.onLine && (applicationCache.status === applicationCache.IDLE || applicationCache.status === applicationCache.UPDATEREADY)) {
       applicationCache.update();
     }
   }, 3600000);
@@ -101,7 +101,7 @@
   input.getSession().setUseSoftTabs(false);
   input.commands.removeCommand('showSettingsMenu');
 
-  ace.config.loadModule('ace/ext/language_tools', function() {
+  ace.config.loadModule('ace/ext/language_tools', function () {
     input.setOptions({
       enableBasicAutocompletion: true,
       enableSnippets: false,
@@ -175,12 +175,12 @@
   lightButton.onclick = selectLightTheme;
   darkButton.onclick = selectDarkTheme;
 
-  document.getElementById('wide').onclick = function() {
+  document.getElementById('wide').onclick = function () {
     document.documentElement.classList.add('wide');
     input.resize();
   };
 
-  document.getElementById('expando').onclick = function() {
+  document.getElementById('expando').onclick = function () {
     document.documentElement.classList.remove('wide');
     input.resize();
   };
@@ -333,7 +333,7 @@
     compileButton.disabled = true;
 
     var xhr = new XMLHttpRequest();
-    xhr.onload = function() {
+    xhr.onload = function () {
       var type = this.getResponseHeader('Content-Type');
 
       if (type == 'application/json') {
@@ -400,8 +400,8 @@
       close.type = 'button';
       close.classList.add('close');
       close.textContent = '\u00D7';
-      close.onclick = (function(filename, li) {
-        return (function() {
+      close.onclick = (function (filename, li) {
+        return (function () {
           delete localStorage[filename];
           includes.removeChild(li);
         });
@@ -436,12 +436,12 @@
     var sessionAlert = document.getElementById('session-alert');
 
     var closeButton = sessionAlert.getElementsByClassName('close')[0];
-    closeButton.onclick = function() {
+    closeButton.onclick = function () {
       sessionAlert.classList.add('hide');
     };
 
     var loadTemplate = sessionAlert.getElementsByClassName('alert-link')[0];
-    loadTemplate.onclick = function() {
+    loadTemplate.onclick = function () {
       sessionAlert.classList.add('hide');
 
       input.setValue(template, -1);
@@ -471,7 +471,7 @@
     sessionAlert.classList.remove('hide');
   }
 
-  input.on('input', function() {
+  input.on('input', function () {
     localStorage['input-file'] = input.getValue();
   });
 
@@ -486,7 +486,7 @@
   window.ondragover = killDropEvent;
   window.ondrop = killDropEvent;
 
-  includeDrop.ondragenter = function(event) {
+  includeDrop.ondragenter = function (event) {
     includeDrop.classList.add('hover');
     event.dataTransfer.dropEffect = 'copy';
 
@@ -494,21 +494,21 @@
     event.preventDefault();
   };
 
-  includeDrop.ondragover = function(event) {
+  includeDrop.ondragover = function (event) {
     event.dataTransfer.dropEffect = 'copy';
 
     event.stopPropagation();
     event.preventDefault();
   };
 
-  includeDrop.ondragleave = function(event) {
+  includeDrop.ondragleave = function (event) {
     includeDrop.classList.remove('hover');
 
     event.stopPropagation();
     event.preventDefault();
   };
 
-  includeDrop.ondrop = function(event) {
+  includeDrop.ondrop = function (event) {
     includeDrop.classList.remove('hover');
 
     for (var i = 0; i < event.dataTransfer.files.length; ++i) {
@@ -519,8 +519,8 @@
       }
 
       var reader = new FileReader();
-      reader.onload = (function() {
-        return function(event) {
+      reader.onload = (function () {
+        return function (event) {
           var exists = (localStorage['/extra/' + file.name] !== undefined);
           localStorage['/extra/' + file.name] = event.target.result;
 
@@ -535,7 +535,7 @@
           close.type = 'button';
           close.classList.add('close');
           close.textContent = '\u00D7';
-          close.onclick = function() {
+          close.onclick = function () {
             delete localStorage['/extra/' + file.name];
             includes.removeChild(li);
           };
@@ -559,21 +559,21 @@
     event.preventDefault();
   };
 
-  input.container.ondragenter = function(event) {
+  input.container.ondragenter = function (event) {
     event.dataTransfer.dropEffect = 'copy';
 
     event.stopPropagation();
     event.preventDefault();
   };
 
-  input.container.ondragover = function(event) {
+  input.container.ondragover = function (event) {
     event.dataTransfer.dropEffect = 'copy';
 
     event.stopPropagation();
     event.preventDefault();
   };
 
-  input.container.ondrop = function(event) {
+  input.container.ondrop = function (event) {
     if (event.dataTransfer.files.length != 1) {
       return;
     }
@@ -591,7 +591,7 @@
     }
 
     var reader = new FileReader();
-    reader.onload = function(event) {
+    reader.onload = function (event) {
       input.setValue(event.target.result, -1);
     }
 
@@ -719,7 +719,7 @@
     lastException = null;
   }
 
-  compileButton.onclick = function() {
+  compileButton.onclick = function () {
     compiled = undefined;
     downloadButton.disabled = true;
     runButton.disabled = true;
@@ -734,7 +734,7 @@
     compile();
   };
 
-  downloadButton.onclick = function() {
+  downloadButton.onclick = function () {
     if (!compiled) {
       downloadButton.disabled = true;
       runButton.disabled = true;
@@ -746,7 +746,7 @@
     saveAs(blob, outputFile);
   };
 
-  runButton.onclick = function() {
+  runButton.onclick = function () {
     if (!compiled) {
       downloadButton.disabled = true;
       runButton.disabled = true;
@@ -762,7 +762,7 @@
   input.commands.addCommand({
     name: 'compile',
     bindKey: { win: 'Ctrl-S', mac: 'Cmd-S' },
-    exec: function(editor) {
+    exec: function (editor) {
       compileButton.onclick();
     }
   });
