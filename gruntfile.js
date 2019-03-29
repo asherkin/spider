@@ -1,4 +1,7 @@
 module.exports = grunt => {
+  require('load-grunt-tasks')(grunt);
+  require('time-grunt')(grunt);
+
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
@@ -15,13 +18,25 @@ module.exports = grunt => {
         files: [{
           expand: true,
           cwd: 'src/',
-          src: ['js/worker.js', 'js/run-worker.js'],
+          src: [
+            'js/worker.js',
+            'js/run-worker.js'
+          ],
           dest: 'build/',
         }, {
-          src: ['src/js/natives/**/*.js'],
+          src: [
+            'src/js/natives/**/*.js'
+          ],
           dest: 'build/js/natives.js',
         }, {
-          src: ['src/js/ace/ace.js', 'src/js/ace/**/*.js', 'src/js/FileSaver.js', 'src/js/translations/en.js', 'src/js/translations/**/*.js', 'src/js/spider.js'],
+          src: [
+            'src/js/ace/ace.js',
+            'src/js/ace/**/*.js',
+            'src/js/FileSaver.js',
+            'src/js/translations/en.js',
+            'src/js/translations/**/*.js',
+            'src/js/spider.js'
+          ],
           dest: 'build/js/spider.js',
         }],
       },
@@ -46,7 +61,7 @@ module.exports = grunt => {
           expand: true,
           cwd: 'src/',
           src: [
-              'index.html'
+            'index.html'
           ],
           dest: 'build/',
         }],
@@ -55,19 +70,40 @@ module.exports = grunt => {
 
     copy: {
       build: {
-        files: [{
-          expand: true,
-          cwd: 'src/',
-          src: [
+        files: [
+          {
+            expand: true,
+            cwd: 'src/',
+            src: [
               'favicon.ico',
               'robots.txt',
               'js/spcomp/*',
               'js/amxxpc/*',
               'js/sourcepawn.js'
-          ],
-          dest: 'build/',
-        }],
+            ],
+            dest: 'build/',
+          },
+          {
+            expand: true,
+            src: ['electron.js'],
+            dest: 'build/'
+          },
+          {
+            expand: true,
+            src: ['package.json'],
+            dest: 'build/'
+          }
+        ],
       },
+    },
+
+    rename: {
+      main: {
+        files: [{
+          src: ['build/electron.js'],
+          dest: 'build/index.js'
+        }]
+      }
     },
 
     appcache: {
@@ -78,7 +114,10 @@ module.exports = grunt => {
         dest: 'build/spider.appcache',
         cache: {
           patterns: [
-              'build/**/*', '!build/index.html', '!build/robots.txt'],
+            'build/**/*',
+            '!build/index.html',
+            '!build/robots.txt'
+          ],
         },
         network: ['https://users.alliedmods.net/~asherkin/attachment.php'],
       },
@@ -116,24 +155,16 @@ module.exports = grunt => {
 
     watch: {
       build: {
-        files: ['gruntfile.js', 'src/**/*'],
+        files: [
+          'gruntfile.js',
+          'src/**/*'
+        ],
         tasks: ['newer:uglify:build', 'newer:cssmin:build', 'newer:htmlmin:build', 'newer:copy:build'],
       },
     },
   });
 
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-cssmin');
-  grunt.loadNpmTasks('grunt-contrib-htmlmin');
-  grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-appcache');
-  grunt.loadNpmTasks('grunt-contrib-compress');
-  grunt.loadNpmTasks('grunt-contrib-connect');
-  grunt.loadNpmTasks('grunt-newer');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-
-  grunt.registerTask('build', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy']);
+  grunt.registerTask('build', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy', 'rename']);
   grunt.registerTask('default', ['build', 'appcache', 'compress']);
   grunt.registerTask('serve', ['build', 'connect', 'watch']);
 };

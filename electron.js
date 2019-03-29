@@ -7,7 +7,11 @@ let win;
 
 const createWindow = () => {
     // Create the browser window.
-    win = new BrowserWindow({show: false});
+    win = new BrowserWindow({
+        title: 'Spider - SourcePawn Compiler',
+        backgroundColor: '#272822',
+        show: false
+    });
     win.maximize();
 
     // and load the index.html of the app.
@@ -16,9 +20,15 @@ const createWindow = () => {
     // Open the DevTools.
     win.webContents.openDevTools();
 
-    win.webContents.on('ready-to-show', () => {
-        win.show();
-    });
+    let eventCount = 0;
+    let processEvent = () => {
+        if (++eventCount === 2) {
+            win.show();
+            win.focus();
+        }
+    };
+    win.webContents.on('did-finish-load', processEvent);
+    win.on('ready-to-show', processEvent);
 
     // Emitted when the window is closed.
     win.on('closed', () => {

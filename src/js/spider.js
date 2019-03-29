@@ -136,7 +136,7 @@
   var includes = document.getElementById('includes');
   var includeDrop = document.getElementById('include-drop');
 
-  var theme;
+  var theme = localStorage['theme'] || 'dark';
 
   function selectLightTheme() {
     if (theme === 'light') {
