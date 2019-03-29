@@ -415,7 +415,7 @@
       edit.type = 'button';
       edit.style.cssText = "margin-right: 10px;";
       edit.classList.add('close');
-      edit.textContent = 'EDIT';
+      edit.textContent = '\u270E';
       edit.onclick = (function (filename, li) {
         filename = filename.split('/');
         filename.shift();
@@ -580,7 +580,7 @@
           edit.type = 'button';
           edit.style.cssText = "margin-right: 10px;";
           edit.classList.add('close');
-          edit.textContent = 'EDIT';
+          edit.textContent = '\u270E';
           edit.onclick = (function (filename, li) {
             filename = filename.split('/');
             filename.shift();
