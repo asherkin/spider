@@ -210,8 +210,8 @@ module.exports = grunt => {
     },
   });
 
-  grunt.registerTask('build', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy', 'rename']);
-  grunt.registerTask('build-electron', ['build', 'electron']);
+  grunt.registerTask('build', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy']);
+  grunt.registerTask('build-electron', ['build', 'electron', 'rename']);
   grunt.registerTask('default', ['build', 'appcache', 'compress']);
   grunt.registerTask('serve', ['build', 'connect', 'watch']);
 };

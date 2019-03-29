@@ -363,7 +363,7 @@
       }
 
       compileButton.disabled = false;
-    }
+    };
 
     xhr.open('GET', 'https://users.alliedmods.net/~asherkin/attachment.php?id=' + location.hash.slice(1), true);
     xhr.send();
@@ -396,6 +396,8 @@
       var li = document.createElement('li');
       li.classList.add('list-group-item');
 
+      var controls = document.createElement('div');
+
       var close = document.createElement('button');
       close.type = 'button';
       close.classList.add('close');
@@ -406,6 +408,25 @@
           includes.removeChild(li);
         });
       })(filename, li);
+
+      controls.appendChild(close);
+
+      var edit = document.createElement('button');
+      close.type = 'button';
+      close.style.cssText = "margin-right: 20px;";
+      close.classList.add('edit');
+      close.textContent = 'EDIT';
+      close.onclick = function () {
+          var newName = prompt('What would you like the new file name to be?', file.name);
+
+          if (newName !== null && file.name !== newName) {
+              localStorage['/extra/' + newName] = localStorage['/extra/' + file.name];
+              li.textContent = newName;
+              delete localStorage['/extra/' + file.name];
+          }
+      };
+
+      controls.appendChild(edit);
 
       var display = document.createElement('ol');
 
@@ -423,7 +444,7 @@
         display.appendChild(olli);
       }
 
-      li.appendChild(close);
+      li.appendChild(controls);
       li.appendChild(display);
 
       includes.insertBefore(li, includeDrop);
@@ -531,6 +552,8 @@
           var li = document.createElement('li');
           li.classList.add('list-group-item');
 
+          var controls = document.createElement('div');
+
           var close = document.createElement('button');
           close.type = 'button';
           close.classList.add('close');
@@ -540,12 +563,31 @@
             includes.removeChild(li);
           };
 
+          controls.appendChild(close);
+
+          var edit = document.createElement('button');
+          close.type = 'button';
+          close.style.cssText = "margin-right: 20px;";
+          close.classList.add('edit');
+          close.textContent = 'EDIT';
+          close.onclick = function () {
+            var newName = prompt('What would you like the new file name to be?', file.name);
+
+            if (newName !== null && file.name !== newName) {
+              localStorage['/extra/' + newName] = localStorage['/extra/' + file.name];
+              li.textContent = newName;
+              delete localStorage['/extra/' + file.name];
+            }
+          };
+
+          controls.appendChild(edit);
+
           var display = document.createElement('ol');
           var olli = document.createElement('li');
           olli.textContent = file.name;
           display.appendChild(olli);
 
-          li.appendChild(close);
+          li.appendChild(controls);
           li.appendChild(display);
 
           includes.insertBefore(li, includeDrop);
@@ -593,7 +635,7 @@
     var reader = new FileReader();
     reader.onload = function (event) {
       input.setValue(event.target.result, -1);
-    }
+    };
 
     reader.readAsText(file);
 
@@ -624,7 +666,7 @@
 
       if (filename === 'input-file') {
         filename = inputFile;
-      };
+      }
 
       /*
       var buffer = new ArrayBuffer(content.length * 2);
