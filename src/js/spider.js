@@ -412,19 +412,30 @@
       controls.appendChild(close);
 
       var edit = document.createElement('button');
-      close.type = 'button';
-      close.style.cssText = "margin-right: 20px;";
-      close.classList.add('edit');
-      close.textContent = 'EDIT';
-      close.onclick = function () {
-          var newName = prompt('What would you like the new file name to be?', file.name);
+      edit.type = 'button';
+      edit.style.cssText = "margin-right: 20px;";
+      edit.classList.add('close');
+      edit.textContent = 'EDIT';
+      edit.onclick = (function (filename, li) {
+        filename = filename.split('/');
+        filename.shift();
 
-          if (newName !== null && file.name !== newName) {
-              localStorage['/extra/' + newName] = localStorage['/extra/' + file.name];
-              li.textContent = newName;
-              delete localStorage['/extra/' + file.name];
+        if (filename[0] === 'extra') {
+          filename.shift();
+        }
+
+        filename = filename.join('/');
+
+        return (function () {
+          var newName = prompt('What would you like the new file name to be?', filename);
+
+          if (newName !== null && filename !== newName) {
+            localStorage['/extra/' + newName] = localStorage['/extra/' + filename];
+            li.textContent = newName;
+            delete localStorage['/extra/' + filename];
           }
-      };
+        });
+      })(filename, li);
 
       controls.appendChild(edit);
 
@@ -566,19 +577,30 @@
           controls.appendChild(close);
 
           var edit = document.createElement('button');
-          close.type = 'button';
-          close.style.cssText = "margin-right: 20px;";
-          close.classList.add('edit');
-          close.textContent = 'EDIT';
-          close.onclick = function () {
-            var newName = prompt('What would you like the new file name to be?', file.name);
+          edit.type = 'button';
+          edit.style.cssText = "margin-right: 20px;";
+          edit.classList.add('close');
+          edit.textContent = 'EDIT';
+          edit.onclick = (function (filename, li) {
+            filename = filename.split('/');
+            filename.shift();
 
-            if (newName !== null && file.name !== newName) {
-              localStorage['/extra/' + newName] = localStorage['/extra/' + file.name];
-              li.textContent = newName;
-              delete localStorage['/extra/' + file.name];
+            if (filename[0] === 'extra') {
+              filename.shift();
             }
-          };
+
+            filename = filename.join('/');
+
+            return (function () {
+              var newName = prompt('What would you like the new file name to be?', filename);
+
+              if (newName !== null && filename !== newName) {
+                localStorage['/extra/' + newName] = localStorage['/extra/' + filename];
+                li.textContent = newName;
+                delete localStorage['/extra/' + filename];
+              }
+            });
+          })(filename, li);
 
           controls.appendChild(edit);
 
