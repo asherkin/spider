@@ -413,7 +413,7 @@
 
       var edit = document.createElement('button');
       edit.type = 'button';
-      edit.style.cssText = "margin-right: 20px;";
+      edit.style.cssText = "margin-right: 10px;";
       edit.classList.add('close');
       edit.textContent = 'EDIT';
       edit.onclick = (function (filename, li) {
@@ -578,7 +578,7 @@
 
           var edit = document.createElement('button');
           edit.type = 'button';
-          edit.style.cssText = "margin-right: 20px;";
+          edit.style.cssText = "margin-right: 10px;";
           edit.classList.add('close');
           edit.textContent = 'EDIT';
           edit.onclick = (function (filename, li) {
