@@ -6,7 +6,9 @@ A web-based, entirely client-side, editor and compiler for SourcePawn developmen
 
 ## Building Electron
 
-`cd build; electron-packager . spider --platform=win32 --arch=x64 --overwrite`
+To build the Electron apps run:
+
+`npm run build-electron`
 
 ### Compilers
 One day there will be a Makefile for this.
