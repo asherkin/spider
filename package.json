@@ -8,6 +8,9 @@
     "type": "git",
     "url": "https://github.com/asherkin/spider.git"
   },
+  "scripts": {
+    "start": "electron-packager build/ --overwrite"
+  },
   "author": {
     "name": "Asher Baker",
     "email": "asherkin@limetech.org",
@@ -33,5 +36,8 @@
     "grunt-contrib-uglify": "~0.5.1",
     "grunt-contrib-watch": "^0.6.1",
     "grunt-newer": "^0.7.0"
+  },
+  "dependencies": {
+    "electron-packager": "^13.1.1"
   }
 }

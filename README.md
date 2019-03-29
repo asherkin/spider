@@ -4,6 +4,10 @@ A web-based, entirely client-side, editor and compiler for SourcePawn developmen
 ## Building
 `grunt` alone will do a production build with the appcache manifest and gzip compression. `grunt serve` will start a local webserver and rebuild on changes.
 
+## Building Electron
+
+`cd build; electron-packager . spider --platform=win32 --arch=x64 --overwrite`
+
 ### Compilers
 One day there will be a Makefile for this.
 
