@@ -2,6 +2,14 @@ module.exports = grunt => {
   require('load-grunt-tasks')(grunt);
   require('time-grunt')(grunt);
 
+  const defaultElectronOptions = {
+      name: 'Spider',
+      dir: './build',
+      out: './electron-builds',
+      overwrite: true,
+      icon: './build/favicon.ico'
+  };
+
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
@@ -137,6 +145,44 @@ module.exports = grunt => {
       },
     },
 
+    electron: {
+      buildLinux32: {
+        options: {
+          arch: 'ia32',
+          platform: 'linux',
+          ...defaultElectronOptions
+        }
+      },
+      buildWin32: {
+        options: {
+          arch: 'ia32',
+          platform: 'win32',
+          ...defaultElectronOptions
+        }
+      },
+      buildLinux64: {
+        options: {
+          arch: 'x64',
+          platform: 'linux',
+          ...defaultElectronOptions
+        }
+      },
+      buildWin64: {
+        options: {
+          arch: 'x64',
+          platform: 'win32',
+          ...defaultElectronOptions
+        }
+      },
+      buildMac64: {
+        options: {
+          platform: 'darwin',
+          arch: 'x64',
+          ...defaultElectronOptions
+        }
+      },
+    },
+
     connect: {
       build: {
         options: {
@@ -165,6 +211,7 @@ module.exports = grunt => {
   });
 
   grunt.registerTask('build', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy', 'rename']);
+  grunt.registerTask('build-electron', ['build', 'electron']);
   grunt.registerTask('default', ['build', 'appcache', 'compress']);
   grunt.registerTask('serve', ['build', 'connect', 'watch']);
 };

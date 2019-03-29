@@ -2,14 +2,15 @@
   "name": "spider",
   "version": "1.0.0",
   "description": "SourcePawn Web Compiler",
-  "homepage": "https://spider.limetech.org/",
+  "homepage": "https://spider.limetech.io/",
   "license": "GPL-3.0+",
   "repository": {
     "type": "git",
     "url": "https://github.com/asherkin/spider.git"
   },
   "scripts": {
-    "build": "electron-packager build/ --overwrite"
+    "build": "grunt build",
+    "build-electron": "grunt build-electron"
   },
   "author": {
     "name": "Asher Baker",
@@ -37,6 +38,7 @@
     "grunt-contrib-rename": "^0.2.0",
     "grunt-contrib-uglify": "~0.5.1",
     "grunt-contrib-watch": "^0.6.1",
+    "grunt-electron": "^9.0.1",
     "grunt-newer": "^0.7.0",
     "load-grunt-tasks": "^4.0.0",
     "time-grunt": "^2.0.0"
