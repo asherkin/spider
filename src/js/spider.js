@@ -570,8 +570,7 @@
   });
 
   function processFile(file, path) {
-    debugger;
-    if (!path.match(/\.(sma|inl|sp|inc)$/)) {
+    if (!file.name.match(/\.(sma|inl|sp|inc)$/)) {
       return;
     }
 
