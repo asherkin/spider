@@ -552,11 +552,12 @@
         dirReader.readEntries(function(results) {
           console.log(results);
           for (var j = 0; j < results.length; j++) {
-            var fullPath = results[j].fullPath;
-            results[j].file(function (file) {
-              console.log(file);
-              processFile(file, fullPath);
-            });
+            results[j].file((function(results, j) {
+              return function (file) {
+                console.log(results[j].fullPath);
+                processFile(file, results[j].fullPath);
+              }
+            }(results, j)));
           }
         }, function(error) {});
       } else if (item.isFile) {
@@ -569,21 +570,24 @@
   });
 
   function processFile(file, path) {
-    if (!file.name.match(/\.(sma|inl|sp|inc)$/)) {
+    debugger;
+    if (!path.match(/\.(sma|inl|sp|inc)$/)) {
       return;
     }
 
     var reader = new FileReader();
     reader.onload = (function (path) {
       return function (event) {
+        console.log(path);
         if (path[0] !== '/') {
           path = '/extra/' + path;
         } else {
           path = '/extra' + path;
         }
 
-        var exists = (localStorage[path] !== undefined);
-        localStorage[path] = event.target.result;
+        var exists = (localStorage.getItem(path) !== undefined);
+
+        localStorage.setItem(path, event.target.result);
 
         if (exists) {
           return;
