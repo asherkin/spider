@@ -540,88 +540,113 @@
     event.preventDefault();
   };
 
-  includeDrop.ondrop = function (event) {
+  includeDrop.addEventListener("drop", function (event) {
     includeDrop.classList.remove('hover');
 
-    for (var i = 0; i < event.dataTransfer.files.length; ++i) {
-      var file = event.dataTransfer.files[i];
+    for (var i = 0; i < event.dataTransfer.items.length; ++i) {
+      var item = event.dataTransfer.items[i].webkitGetAsEntry();
 
-      if (!file.type.match(/^text\//) && !file.name.match(/\.(sma|inl|sp|inc)$/)) {
-        continue;
+      if (item.isDirectory) {
+        var dirReader = item.createReader();
+
+        dirReader.readEntries(function(results) {
+          console.log(results);
+          for (var j = 0; j < results.length; j++) {
+            var fullPath = results[j].fullPath;
+            results[j].file(function (file) {
+              console.log(file);
+              processFile(file, fullPath);
+            });
+          }
+        }, function(error) {});
+      } else if (item.isFile) {
+        processFile(item);
       }
 
-      var reader = new FileReader();
-      reader.onload = (function () {
-        return function (event) {
-          var exists = (localStorage['/extra/' + file.name] !== undefined);
-          localStorage['/extra/' + file.name] = event.target.result;
+      event.stopPropagation();
+      event.preventDefault();
+    }
+  });
 
-          if (exists) {
-            return;
-          }
-
-          var li = document.createElement('li');
-          li.classList.add('list-group-item');
-
-          var controls = document.createElement('div');
-
-          var close = document.createElement('button');
-          close.type = 'button';
-          close.classList.add('close');
-          close.textContent = '\u00D7';
-          close.onclick = function () {
-            delete localStorage['/extra/' + file.name];
-            includes.removeChild(li);
-          };
-
-          controls.appendChild(close);
-
-          var edit = document.createElement('button');
-          edit.type = 'button';
-          edit.style.cssText = "margin-right: 10px;";
-          edit.classList.add('close');
-          edit.textContent = '\u270E';
-          edit.onclick = (function (filename, li) {
-            filename = filename.split('/');
-            filename.shift();
-
-            if (filename[0] === 'extra') {
-              filename.shift();
-            }
-
-            filename = filename.join('/');
-
-            return (function () {
-              var newName = prompt('What would you like the new file name to be?', filename);
-
-              if (newName !== null && filename !== newName) {
-                localStorage['/extra/' + newName] = localStorage['/extra/' + filename];
-                li.textContent = newName;
-                delete localStorage['/extra/' + filename];
-              }
-            });
-          })(filename, li);
-
-          controls.appendChild(edit);
-
-          var display = document.createElement('ol');
-          var olli = document.createElement('li');
-          olli.textContent = file.name;
-          display.appendChild(olli);
-
-          li.appendChild(controls);
-          li.appendChild(display);
-
-          includes.insertBefore(li, includeDrop);
-        };
-      })();
-
-      reader.readAsText(file);
+  function processFile(file, path) {
+    if (!file.name.match(/\.(sma|inl|sp|inc)$/)) {
+      return;
     }
 
-    event.stopPropagation();
-    event.preventDefault();
-  };
+    var reader = new FileReader();
+    reader.onload = (function (path) {
+      return function (event) {
+        if (path[0] !== '/') {
+          path = '/extra/' + path;
+        } else {
+          path = '/extra' + path;
+        }
+
+        var exists = (localStorage[path] !== undefined);
+        localStorage[path] = event.target.result;
+
+        if (exists) {
+          return;
+        }
+
+        var li = document.createElement('li');
+        li.classList.add('list-group-item');
+
+        var controls = document.createElement('div');
+
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.classList.add('close');
+        close.textContent = '\u00D7';
+        close.onclick = function () {
+          delete localStorage[path];
+          includes.removeChild(li);
+        };
+
+        controls.appendChild(close);
+
+        var edit = document.createElement('button');
+        edit.type = 'button';
+        edit.style.cssText = "margin-right: 10px;";
+        edit.classList.add('close');
+        edit.textContent = '\u270E';
+        edit.onclick = (function (filename, li) {
+          filename = filename.split('/');
+          filename.shift();
+
+          if (filename[0] === 'extra') {
+            filename.shift();
+          }
+
+          filename = filename.join('/');
+
+          return (function () {
+            var newName = prompt('What would you like the new file name to be?', filename);
+
+            if (newName !== null && filename !== newName) {
+              localStorage['/extra/' + newName] = localStorage['/extra/' + filename];
+              li.textContent = newName;
+              delete localStorage['/extra/' + filename];
+            }
+          });
+        })(path, li);
+
+        controls.appendChild(edit);
+
+        var display = document.createElement('ol');
+        var olli = document.createElement('li');
+        olli.textContent = path;
+        display.appendChild(olli);
+
+        li.appendChild(controls);
+        li.appendChild(display);
+
+        includes.insertBefore(li, includeDrop);
+      };
+    })(path);
+
+    reader.readAsText(file);
+  }
 
   input.container.ondragenter = function (event) {
     event.dataTransfer.dropEffect = 'copy';

@@ -213,5 +213,5 @@ module.exports = grunt => {
   grunt.registerTask('build', ['clean', 'uglify', 'cssmin', 'htmlmin', 'copy']);
   grunt.registerTask('build-electron', ['build', 'electron', 'rename']);
   grunt.registerTask('default', ['build', 'appcache', 'compress']);
-  grunt.registerTask('serve', ['build', 'connect', 'watch']);
+  grunt.registerTask('serve', ['build', 'watch']);
 };
