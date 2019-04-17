@@ -554,14 +554,17 @@
           for (var j = 0; j < results.length; j++) {
             results[j].file((function(results, j) {
               return function (file) {
-                console.log(results[j].fullPath);
                 processFile(file, results[j].fullPath);
               }
             }(results, j)));
           }
         }, function(error) {});
       } else if (item.isFile) {
-        processFile(item);
+        item.file((function(item) {
+          return function (file) {
+            processFile(file, item.fullPath);
+          }
+        }(item)));
       }
 
       event.stopPropagation();
@@ -577,7 +580,6 @@
     var reader = new FileReader();
     reader.onload = (function (path) {
       return function (event) {
-        console.log(path);
         if (path[0] !== '/') {
           path = '/extra/' + path;
         } else {
