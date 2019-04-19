@@ -8,7 +8,7 @@ translations['en'] = [
   "Want a clean slate instead?",
   "Light",
   "Dark",
-  "Full Screen",
+  "Hide Sidebar",
   "Compile",
   "Download",
   "Drop", "files here",

@@ -260,7 +260,6 @@
     runButton.disabled = true;
 
     downloadButton.classList.add('col-xs-9');
-    downloadButton.classList.add('col-lg-10');
     downloadButton.classList.remove('col-xs-12');
     downloadButton.classList.remove('dropdown-toggle');
     runButton.classList.remove('hidden');
