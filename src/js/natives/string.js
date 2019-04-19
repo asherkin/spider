@@ -25,3 +25,13 @@ CreateAndBindNative(spRuntime, 'StringToFloat', function(ctx, args) {
   Module._free(floatPtr);
   return intVal;
 });
+
+CreateAndBindNative(spRuntime, 'StrContains', function(ctx, args) {
+  var str = Module.Pointer_stringify(Module._context_local_to_physical_address(ctx, args[0]));
+  var substr = Module.Pointer_stringify(Module._context_local_to_physical_address(ctx, args[1]));
+  if (!args[2]) {
+    str = str.toLowerCase();
+    substr = substr.toLowerCase();
+  }
+  return str.indexOf(substr);
+});
