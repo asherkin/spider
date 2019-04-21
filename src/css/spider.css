@@ -244,6 +244,51 @@ small.text-muted a:focus, small.text-muted a:hover {
   background-color: #3D3F39;
 }
 
+.ace_invisible {
+    visibility: hidden;
+}
+
+.ace_invisible_eol {
+    visibility: hidden !important;
+}
+
+.ace-tm .ace_invisible {
+    color: #dddddd !important;
+}
+
+.ace-monokai .ace_invisible {
+    color: #52524d !important;
+}
+
+.ace_line > .ace_invisible:first-child,
+.ace_line > .ace_invisible:first-child + .ace_invisible,
+.ace_line > .ace_invisible:first-child + .ace_invisible + .ace_invisible,
+.ace_line > .ace_invisible:first-child + .ace_invisible + .ace_invisible + .ace_invisible,
+.ace_line > .ace_invisible:first-child + .ace_invisible + .ace_invisible + .ace_invisible + .ace_invisible,
+.ace_line > .ace_invisible:first-child + .ace_invisible + .ace_invisible + .ace_invisible + .ace_invisible + .ace_invisible,
+.ace_line > .ace_invisible:first-child + .ace_invisible + .ace_invisible + .ace_invisible + .ace_invisible + .ace_invisible + .ace_invisible,
+.ace_line > .ace_invisible:first-child + .ace_invisible + .ace_invisible + .ace_invisible + .ace_invisible + .ace_invisible + .ace_invisible + .ace_invisible {
+    visibility: visible;
+}
+
+.ace_line .ace_fold {
+    background: none !important;
+    border: none !important;
+    color: inherit !important;
+    position: relative;
+    visibility: hidden;
+}
+
+.ace_line .ace_fold::after {
+    content: '...';
+    visibility: visible;
+    position: absolute;
+    left: 2px;
+    bottom: 0px;
+    letter-spacing: -2px;
+    opacity: 0.5;
+}
+
 #wide {
   display: none;
 }

@@ -94,9 +94,10 @@
   var input = ace.edit('input');
   input.setTheme('ace/theme/textmate');
   input.getSession().setMode('ace/mode/c_cpp');
-  input.setShowFoldWidgets(false);
+  input.setShowFoldWidgets(true);
   input.setShowPrintMargin(false);
   input.setHighlightActiveLine(false);
+  input.setShowInvisibles(true);
   input.getSession().setUseWrapMode(true);
   input.getSession().setUseSoftTabs(false);
   input.commands.removeCommand('showSettingsMenu');
