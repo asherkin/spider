@@ -99,7 +99,7 @@
   input.setHighlightActiveLine(false);
   input.setShowInvisibles(true);
   input.getSession().setUseWrapMode(true);
-  input.getSession().setUseSoftTabs(false);
+  input.getSession().setUseSoftTabs(true);
   input.commands.removeCommand('showSettingsMenu');
 
   ace.config.loadModule('ace/ext/language_tools', function() {
@@ -193,16 +193,16 @@
     '#pragma newdecls required',
     '',
     'public Plugin myinfo = {',
-    '\tname        = "",',
-    '\tauthor      = "",',
-    '\tdescription = "",',
-    '\tversion     = "0.0.0",',
-    '\turl         = ""',
+    '    name        = "",',
+    '    author      = "",',
+    '    description = "",',
+    '    version     = "0.0.0",',
+    '    url         = ""',
     '};',
     '',
     'public void OnPluginStart()',
     '{',
-    '\tPrintToServer("Hello, World!");',
+    '    PrintToServer("Hello, World!");',
     '}',
     '',
   ].join('\n');
@@ -218,9 +218,9 @@
     '',
     'public plugin_init()',
     '{',
-    '\tregister_plugin(PLUGIN, VERSION, AUTHOR);',
-    '\t',
-    '\tserver_print("Hello, World!");',
+    '    register_plugin(PLUGIN, VERSION, AUTHOR);',
+    '    ',
+    '    server_print("Hello, World!");',
     '}',
     '',
   ].join('\n');
