@@ -20,8 +20,14 @@ var Module;
       Module['compiler'] = event.data;
       Module['arguments'].push('plugin.' + (event.data === 'amxxpc' ? 'sma' : 'sp'));
 
+      // These are still used by amxxpc
       Module['memoryInitializerPrefixURL'] = event.data + '/';
       Module['filePackagePrefixURL'] = event.data + '/';
+
+      // This is used by spcomp
+      Module['locateFile'] = function(path, prefix) {
+        return event.data + '/' + path;
+      }
 
       importScripts(event.data + '/' + event.data + '.js');
 
