@@ -289,6 +289,23 @@ small.text-muted a:focus, small.text-muted a:hover {
     opacity: 0.5;
 }
 
+.ace_mobile-menu {
+    z-index: 5;
+    box-shadow: none;
+}
+
+.ace_mobile-menu > span > .ace_mobile-button {
+    border-right: 1px solid #dcdcdc;
+}
+
+.ace_mobile-button {
+    padding: 2px 4px;
+}
+
+.ace_mobile-button[action=openCommandPallete] {
+    display: none;
+}
+
 #wide {
   display: none;
 }
@@ -313,7 +330,7 @@ small.text-muted a:focus, small.text-muted a:hover {
   line-height: 0;
   text-align: center;
   font-size: 30px;
-  content: '\25c0';
+  content: '\25c0\fe0e';
   color: #777;
 }
 
