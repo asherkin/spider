@@ -17,8 +17,9 @@ var Module = {
 importScripts('sourcepawn-js.js');
 
 function CreateAndBindNative(runtime, name, func) {
-  var strNativeName = Module.allocate(Module.intArrayFromString(name), 'i8', Module.ALLOC_NORMAL);
-  var funNative = Module.Runtime.addFunction(function(ctx, ptrArgs) {
+  var strNativeName = Module._malloc(name.length + 1);
+  Module.stringToUTF8(name, strNativeName, name.length + 1);
+  var funNative = Module.addFunction(function(ctx, ptrArgs) {
     var args = [];
     var argCount = Module.getValue(ptrArgs, 'i32');
     for (var i = 1; i <= argCount; ++i) {
@@ -117,10 +118,10 @@ function atcprintf(format, ctx, params) {
     var addr = Module._context_local_to_physical_address(ctx, params[i++]);
     switch (type) {
       case 's':
-        var value = Module.Pointer_stringify(addr);
+        var value = Module.UTF8ToString(addr);
         return _formatString(value, leftJustify, minWidth, precision, zeroPad);
       case 'c':
-        var value = Module.Pointer_stringify(addr, 1);
+        var value = Module.UTF8ToString(addr, 1);
         return _formatString(value, leftJustify, minWidth, precision, zeroPad);
       case 'b':
       case 'x':
@@ -167,14 +168,16 @@ onmessage = function(event) {
     return;
   }
 
-  var strFilename = Module.allocate(Module.intArrayFromString('plugin.smx'), 'i8', Module.ALLOC_NORMAL);
+  var filename = 'plugin.smx';
+  var strFilename = Module._malloc(filename.length + 1);
+  Module.stringToUTF8(filename, strFilename, filename.length + 1);
 
   var errorLen = 256;
   var strError = Module._malloc(errorLen);
 
   var spRuntime = Module._environment_new_runtime(spEnv, strFilename, strError, errorLen);
   if (spRuntime === 0) {
-    Module.printErr('Failed to create SourcePawn runtime: ' + Module.Pointer_stringify(strError));
+    Module.printErr('Failed to create SourcePawn runtime: ' + Module.UTF8ToString(strError));
     return;
   }
 
@@ -182,7 +185,9 @@ onmessage = function(event) {
   importScripts('natives.js');
   delete self.spRuntime;
 
-  var strFunctionName = Module.allocate(Module.intArrayFromString('OnPluginStart'), 'i8', Module.ALLOC_NORMAL);
+  var functionName = 'OnPluginStart';
+  var strFunctionName = Module._malloc(functionName.length + 1);
+  Module.stringToUTF8(functionName, strFunctionName, functionName.length + 1);
 
   var functionPtr = Module._runtime_get_function(spRuntime, strFunctionName);
   if (!functionPtr) {
@@ -192,7 +197,7 @@ onmessage = function(event) {
 
   var ptrRet = Module._malloc(4);
   if (Module._function_invoke(functionPtr, ptrRet, strError, errorLen) === 0) {
-    //Module.printErr('Failed to invoke OnPluginStart: ' + Module.Pointer_stringify(strError));
+    //Module.printErr('Failed to invoke OnPluginStart: ' + Module.UTF8ToString(strError));
     return;
   }
 };

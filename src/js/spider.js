@@ -68,28 +68,30 @@
 
   setLanguage(language);
 
-  function showUpdateNotice() {
-    var notice = document.getElementById('update-alert');
-    notice.classList.remove('hide');
+  if (window.applicationCache) {
+    function showUpdateNotice() {
+      var notice = document.getElementById('update-alert');
+      notice.classList.remove('hide');
 
-    var reload = notice.getElementsByClassName('alert-link')[0];
-    reload.onclick = function() {
-      location.reload();
-      return false;
-    };
-  }
-
-  applicationCache.onupdateready = showUpdateNotice;
-
-  if(applicationCache.status === applicationCache.UPDATEREADY) {
-    showUpdateNotice();
-  }
-
-  setInterval(function() {
-    if(navigator.onLine && (applicationCache.status === applicationCache.IDLE || applicationCache.status === applicationCache.UPDATEREADY)) {
-      applicationCache.update();
+      var reload = notice.getElementsByClassName('alert-link')[0];
+      reload.onclick = function() {
+        location.reload();
+        return false;
+      };
     }
-  }, 3600000);
+
+    applicationCache.onupdateready = showUpdateNotice;
+
+    if(applicationCache.status === applicationCache.UPDATEREADY) {
+      showUpdateNotice();
+    }
+
+    setInterval(function() {
+      if(navigator.onLine && (applicationCache.status === applicationCache.IDLE || applicationCache.status === applicationCache.UPDATEREADY)) {
+        applicationCache.update();
+      }
+    }, 3600000);
+  }
 
   var input = ace.edit('input');
   input.setTheme('ace/theme/textmate');
@@ -246,6 +248,7 @@
       worker.terminate();
     }
 
+    console.log('creating new spcomp webworker');
     worker = new Worker('js/worker.js');
     worker.postMessage(compiler);
 
@@ -287,6 +290,7 @@
       worker.terminate();
     }
 
+    console.log('creating new amxxpc webworker');
     worker = new Worker('js/worker.js');
     worker.postMessage(compiler);
 
@@ -603,11 +607,13 @@
 
   function compile() {
     if (worker.onmessage) {
+      console.log('starting new webworker because one was already running during compile');
       worker.terminate();
       worker = new Worker('js/worker.js');
       worker.postMessage(compiler);
     }
 
+    console.log('setting webworker message callback');
     worker.onmessage = handleCompileMessage;
 
     var sources = [];
@@ -638,6 +644,7 @@
       //buffers.push(buffer);
     }
 
+    console.log('asking webworker to do build');
     worker.postMessage(sources/*, buffers*/);
   }
 
@@ -670,6 +677,7 @@
       runButton.disabled = false;
     }
 
+    console.log('creating new webworker post-compile');
     worker.terminate();
     worker = new Worker('js/worker.js');
     worker.postMessage(compiler);

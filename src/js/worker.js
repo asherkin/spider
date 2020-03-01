@@ -57,6 +57,13 @@ var Module;
       FS.writeFile('/' + path + '/' + filename, source);
     }
 
+    console.log('compile request received, calling main');
+
+    // New Emscripten wrapper seems to check this instead of the one in Module
+    if (self.calledRun) {
+      self.calledRun = false;
+    }
+
     shouldRunNow = true;
     Module['calledRun'] = false;
     Module['postRun'] = [postRun];
