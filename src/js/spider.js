@@ -324,6 +324,7 @@
   spcompButton.onclick = spcompSetup;
   amxxpcButton.onclick = amxxpcSetup;
 
+  // alliedmodders attachment match
   if (location.hash.match(/^#\d+$/)) {
     for (var i = localStorage.length - 1; i >= 0; --i) {
       var key = localStorage.key(i);
@@ -367,9 +368,66 @@
       }
 
       compileButton.disabled = false;
-    }
+    };
 
     xhr.open('GET', 'https://users.alliedmods.net/~asherkin/attachment.php?id=' + location.hash.slice(1), true);
+    xhr.send();
+  }
+
+  // gists match
+  var match = /^#gist\/([0-9a-f]+)$/.exec(location.hash);
+  if (match) {
+    for (var i = localStorage.length - 1; i >= 0; --i) {
+      var key = localStorage.key(i);
+
+      if (key.match(/^\//)) {
+        delete localStorage[key];
+      }
+    }
+
+    template = 'Loading...';
+    compileButton.disabled = true;
+
+    var xhr = new XMLHttpRequest();
+    xhr.onload = function() {
+      var data = JSON.parse(this.responseText);
+      if (this.status !== 200) {
+        input.setValue(data['message'], -1);
+        return;
+      }
+
+      // get the first gist sp/sma file
+      var file;
+      for (var key in data['files']) {
+        var filename = data['files'][key]['filename'];
+        if (filename.endsWith('.sp') || filename.endsWith('.sma')) {
+          file = data['files'][key];
+          break;
+        }
+      }
+
+      if (!file) {
+        input.setValue('No SourcePawn file matched in the gists', -1);
+        return;
+      }
+
+      input.setValue(file['content'], -1);
+      localStorage['input-file'] = file['content'];
+
+      var filename = file['filename'];
+      if (filename.endsWith('.sp')) {
+        spcompSetup();
+        outputFile = filename.replace('/\.sp$/', '.smx');
+        compile();
+      } else if (filename.endsWith('.sma')) {
+        amxxpcSetup();
+        outputFile = filename.replace('/\.sp$/', '.smx');
+        compile();
+      }
+      compileButton.disabled = false;
+    };
+    console.log('Match: ' + match);
+    xhr.open('GET', 'https://api.github.com/gists/' + match[1], true);
     xhr.send();
   }
 
