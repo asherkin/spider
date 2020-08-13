@@ -470,3 +470,11 @@ html.dark .ace_search {
 #include-drop.hover:first-child {
   border-top-color: #31708f;
 }
+
+#upload_link{
+    text-decoration:none;
+}
+
+#include-select{
+    display:none
+}
