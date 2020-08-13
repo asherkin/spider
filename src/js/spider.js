@@ -138,6 +138,8 @@
 
   var includes = document.getElementById('includes');
   var includeDrop = document.getElementById('include-drop');
+  var includeSelect = document.getElementById('include-select');
+  var includeSelectText = document.getElementById('upload_link');
 
   var theme;
 
@@ -514,54 +516,63 @@
 
   includeDrop.ondrop = function(event) {
     includeDrop.classList.remove('hover');
-
-    for (var i = 0; i < event.dataTransfer.files.length; ++i) {
-      var file = event.dataTransfer.files[i];
-
-      if (!file.type.match(/^text\//) && !file.name.match(/\.(sma|inl|sp|inc)$/)) {
-        continue;
-      }
-
-      var reader = new FileReader();
-      reader.onload = (function() {
-        return function(event) {
-          var exists = (localStorage['/extra/' + file.name] !== undefined);
-          localStorage['/extra/' + file.name] = event.target.result;
-
-          if (exists) {
-            return;
-          }
-
-          var li = document.createElement('li');
-          li.classList.add('list-group-item');
-
-          var close = document.createElement('button');
-          close.type = 'button';
-          close.classList.add('close');
-          close.textContent = '\u00D7';
-          close.onclick = function() {
-            delete localStorage['/extra/' + file.name];
-            includes.removeChild(li);
-          };
-
-          var display = document.createElement('ol');
-          var olli = document.createElement('li');
-          olli.textContent = file.name;
-          display.appendChild(olli);
-
-          li.appendChild(close);
-          li.appendChild(display);
-
-          includes.insertBefore(li, includeDrop);
-        };
-      })();
-
-      reader.readAsText(file);
+	
+    for (var i = 0; i < event.dataTransfer.files.length; i++) {
+	  setupReader(event.dataTransfer.files[i]);
     }
-
+	
     event.stopPropagation();
     event.preventDefault();
   };
+
+  includeSelectText.onclick = function() {
+      includeSelect.click();
+  };
+
+  includeSelect.onchange = function(event) {
+	for (var i = 0; i < event.target.files.length; i++) {
+      setupReader(event.target.files[i]);
+    }
+  }
+
+  function setupReader(file) {
+    if (!file.type.match(/^text\//) && !file.name.match(/\.(sma|inl|sp|inc)$/)) {
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+	  var exists = (localStorage['/extra/' + file.name] !== undefined);
+      localStorage['/extra/' + file.name] = event.target.result;
+
+      if (exists) {
+        return;
+      }
+
+      var li = document.createElement('li');
+      li.classList.add('list-group-item');
+
+      var close = document.createElement('button');
+      close.type = 'button';
+      close.classList.add('close');
+      close.textContent = '\u00D7';
+      close.onclick = function() {
+        delete localStorage['/extra/' + file.name];
+        includes.removeChild(li);
+      };
+
+      var display = document.createElement('ol');
+      var olli = document.createElement('li');
+      olli.textContent = file.name;
+      display.appendChild(olli);
+
+      li.appendChild(close);
+      li.appendChild(display);
+
+      includes.insertBefore(li, includeDrop);
+    }
+    reader.readAsText(file);
+  }
 
   input.container.ondragenter = function(event) {
     event.dataTransfer.dropEffect = 'copy';
