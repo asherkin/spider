@@ -1,6 +1,18 @@
 # Spider
 A web-based, entirely client-side, editor and compiler for SourcePawn development.
 
+## Installing
+```
+apt install nodejs npm;
+npm update -g npm;
+npm -g install grunt;
+npm -g install grunt-cli;
+```
+
+1. Change to the project's root directory `cd /your-directory/`
+2. Install project dependencies with `npm install`
+3. Build with `grunt`
+
 ## Building
 `grunt` alone will do a production build with the appcache manifest and gzip compression. `grunt serve` will start a local webserver and rebuild on changes.
 
