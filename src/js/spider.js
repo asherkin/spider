@@ -230,6 +230,12 @@
   var compiler, template, inputFile, outputFile;
   var worker, compiled, runWorker;
 
+  function resetCompiled() {
+    compiled = undefined;
+    downloadButton.disabled = true;
+    runButton.disabled = true;
+  }
+
   function spcompSetup() {
     if (compiler === 'spcomp') {
       return;
@@ -258,10 +264,7 @@
 
     output.textContent = '';
     input.getSession().clearAnnotations();
-
-    compiled = undefined;
-    downloadButton.disabled = true;
-    runButton.disabled = true;
+    resetCompiled();
 
     downloadButton.classList.add('col-xs-9');
     downloadButton.classList.remove('col-xs-12');
@@ -300,10 +303,7 @@
 
     output.textContent = '';
     input.getSession().clearAnnotations();
-
-    compiled = undefined;
-    downloadButton.disabled = true;
-    runButton.disabled = true;
+    resetCompiled();
 
     downloadButton.classList.remove('col-xs-9');
     downloadButton.classList.remove('col-lg-10');
@@ -464,10 +464,7 @@
 
       output.textContent = '';
       input.getSession().clearAnnotations();
-
-      compiled = undefined;
-      downloadButton.disabled = true;
-      runButton.disabled = true;
+      resetCompiled();
 
       return false;
     };
@@ -477,6 +474,8 @@
 
   input.on('input', function() {
     localStorage['input-file'] = input.getValue();
+
+    resetCompiled();
   });
 
   function killDropEvent(event) {
@@ -527,6 +526,8 @@
         return function(event) {
           var exists = (localStorage['/extra/' + file.name] !== undefined);
           localStorage['/extra/' + file.name] = event.target.result;
+
+          resetCompiled();
 
           if (exists) {
             return;
@@ -728,9 +729,7 @@
   }
 
   compileButton.onclick = function() {
-    compiled = undefined;
-    downloadButton.disabled = true;
-    runButton.disabled = true;
+    resetCompiled();
 
     if (runWorker) {
       runWorker.terminate();
@@ -744,8 +743,7 @@
 
   downloadButton.onclick = function() {
     if (!compiled) {
-      downloadButton.disabled = true;
-      runButton.disabled = true;
+      resetCompiled();
       return;
     }
 
@@ -756,8 +754,7 @@
 
   runButton.onclick = function() {
     if (!compiled) {
-      downloadButton.disabled = true;
-      runButton.disabled = true;
+      resetCompiled();
       return;
     }
 
