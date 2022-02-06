@@ -195,6 +195,11 @@ onmessage = function(event) {
     return;
   }
 
+  Module.print('Warning: Spider does not use the same native implementations');
+  Module.print('as SourceMod. Very little functionality is available here and');
+  Module.print('natives do not behave identically to how they would in SourceMod.')
+  Module.print('');
+
   var ptrRet = Module._malloc(4);
   if (Module._function_invoke(functionPtr, ptrRet, strError, errorLen) === 0) {
     //Module.printErr('Failed to invoke OnPluginStart: ' + Module.UTF8ToString(strError));
